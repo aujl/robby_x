@@ -1,0 +1,34 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        language_version: python3
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.5
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - types-requests
+        args:
+          - --config-file=pyproject.toml
+  - repo: local
+    hooks:
+      - id: pytest-camjam
+        name: pytest-camjam
+        entry: pytest -m "camjam_unit or camjam_simulation or camjam_mocked_hw" --maxfail=1 --disable-warnings
+        language: system
+        pass_filenames: false
+        stages: [commit]
+      - id: npm-test-frontend
+        name: npm-test-frontend
+        entry: bash -c 'cd frontend && npm test -- --run'
+        language: system
+        pass_filenames: false
+        stages: [commit]

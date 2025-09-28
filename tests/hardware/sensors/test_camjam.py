@@ -3,6 +3,9 @@ from dataclasses import asdict
 
 import pytest
 
+
+pytestmark = pytest.mark.camjam_unit
+
 from src.hardware.camjam.sensors.ultrasonic import UltrasonicRanger, UltrasonicReading
 from src.hardware.camjam.sensors.line_follow import LineFollower, LineTelemetry
 from src.hardware.camjam.sensors.encoders import WheelEncoders, EncoderTelemetry

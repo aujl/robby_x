@@ -5,6 +5,9 @@ from typing import Any, Dict, List, Tuple
 
 import pytest
 
+
+pytestmark = pytest.mark.camjam_unit
+
 from src.api.control_service import (
     ControlServiceConfig,
     ControlServiceApp,

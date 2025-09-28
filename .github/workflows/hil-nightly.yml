@@ -1,0 +1,54 @@
+name: CamJam HIL Nightly
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Set to true to force dry-run mode'
+        required: false
+        default: 'false'
+
+jobs:
+  hil-suite:
+    name: Execute CamJam HIL suite
+    runs-on: [self-hosted, camjam-buggy]
+    timeout-minutes: 90
+    env:
+      CAMJAM_HIL_ENABLED: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true') && '0' || secrets.CAMJAM_HIL_ENABLED || '0' }}
+      HIL_OUTPUT_DIR: artifacts/hil
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install HIL dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[hil]
+
+      - name: Prepare output directory
+        run: rm -rf "$HIL_OUTPUT_DIR" && mkdir -p "$HIL_OUTPUT_DIR"
+
+      - name: Motor characterisation sweep
+        run: python -m scripts.hil.run_motor_characterisation --output "$HIL_OUTPUT_DIR"
+
+      - name: Sensor validation course
+        run: python -m scripts.hil.run_sensor_validation --output "$HIL_OUTPUT_DIR"
+
+      - name: PanTilt alignment check
+        run: python -m scripts.hil.run_pantilt_alignment --output "$HIL_OUTPUT_DIR"
+
+      - name: Streaming validation soak test
+        run: python -m scripts.hil.run_streaming_validation --output "$HIL_OUTPUT_DIR"
+
+      - name: Upload HIL artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hil-artifacts
+          path: ${{ env.HIL_OUTPUT_DIR }}

@@ -3,6 +3,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
+
+pytestmark = pytest.mark.camjam_mocked_hw
+
 from src.hardware.camjam.motor_controller import CamJamMotorController
 
 
