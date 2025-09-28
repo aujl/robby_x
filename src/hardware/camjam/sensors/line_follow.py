@@ -104,4 +104,3 @@ class LineFollower:
                 and self._ema_right < self._inactive_threshold
             ):
                 self._on_line = False
-

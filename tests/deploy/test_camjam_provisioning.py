@@ -114,7 +114,9 @@ if [[ "$1" == "start" ]]; then
 fi
 
 exit 0
-""".replace("{inactive_service}", inactive_service or ""),
+""".replace(
+            "{inactive_service}", inactive_service or ""
+        ),
         encoding="utf-8",
     )
     script_path.chmod(stat.S_IRWXU)

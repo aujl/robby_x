@@ -109,9 +109,7 @@ def test_start_stop_stream_configures_camera_and_encoder():
 def test_servo_alignment_applies_offsets_on_commands():
     camera_service = import_service()
     servos = MagicMock()
-    service = camera_service.PanTiltCameraService(
-        servos=servos, pan_offset=1.5, tilt_offset=-0.5
-    )
+    service = camera_service.PanTiltCameraService(servos=servos, pan_offset=1.5, tilt_offset=-0.5)
 
     service.command_servos(-12.0, 22.0)
     servos.move_to.assert_called_once_with(-10.5, 21.5)

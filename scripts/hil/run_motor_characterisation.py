@@ -47,8 +47,7 @@ def main() -> None:
 
     if context.dry_run:
         payload["summary"]["notes"].append(
-            "Dry run – connect to the CamJam buggy and set CAMJAM_HIL_ENABLED=1 "
-            "to collect data."
+            "Dry run – connect to the CamJam buggy and set CAMJAM_HIL_ENABLED=1 " "to collect data."
         )
     else:
         payload["summary"]["status"] = "completed"

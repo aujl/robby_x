@@ -70,9 +70,9 @@ def test_line_follow_normalization_and_hysteresis():
 
         assert reading_2.on_line
         assert reading_3.on_line
-        assert not reading_4.on_line, (
-            "Hysteresis should release once both fall below inactive threshold"
-        )
+        assert (
+            not reading_4.on_line
+        ), "Hysteresis should release once both fall below inactive threshold"
 
         left_values = [reading_1.left, reading_2.left, reading_3.left, reading_4.left]
         assert left_values[1] > left_values[0], "EMA should respond to increasing reflectance"
@@ -85,14 +85,17 @@ def test_line_follow_normalization_and_hysteresis():
 
 
 def test_encoder_velocity_and_debounce():
-    sample_stub = AsyncIteratorStub([
-        (0, 0, 0.0),
-        (10, 10, 0.1),
-        (11, 11, 0.101),
-        (21, 21, 0.2),
-    ])
+    sample_stub = AsyncIteratorStub(
+        [
+            (0, 0, 0.0),
+            (10, 10, 0.1),
+            (11, 11, 0.101),
+            (21, 21, 0.2),
+        ]
+    )
 
     encoders = WheelEncoders(sample_reader=sample_stub, ticks_per_revolution=20, wheel_radius=0.03)
+
     async def run_test():
         reading_1 = await encoders.read()
         reading_2 = await encoders.read()
@@ -119,4 +122,3 @@ def test_encoder_velocity_and_debounce():
         assert "linear_velocity_right" in telemetry_dict
 
     asyncio.run(run_test())
-

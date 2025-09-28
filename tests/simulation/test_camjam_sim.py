@@ -52,8 +52,7 @@ def test_straight_line_scenario_encoder_progression(monkeypatch):
     readings = asyncio.run(_collect())
 
     cumulative = [
-        (reading.cumulative_ticks_left, reading.cumulative_ticks_right)
-        for reading in readings
+        (reading.cumulative_ticks_left, reading.cumulative_ticks_right) for reading in readings
     ]
 
     assert cumulative[0] == (0, 0)
