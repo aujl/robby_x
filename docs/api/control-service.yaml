@@ -1,0 +1,400 @@
+openapi: 3.1.0
+info:
+  title: Robby Control Service API
+  version: 0.1.0
+  description: |
+    REST API for commanding the CamJam differential-drive buggy, pan/tilt servos,
+    accessing ultrasonic and line-follow sensor telemetry, managing configuration,
+    and issuing emergency stop commands. All endpoints require a valid API key
+    issued to trusted local-network clients.
+  contact:
+    name: Robotics Platform Team
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: http://robby-control.local
+    description: Production deployment on the robotics controller
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+  schemas:
+    DifferentialDriveCommand:
+      type: object
+      required:
+        - left_speed
+        - right_speed
+      properties:
+        left_speed:
+          type: number
+          format: float
+          minimum: -1.0
+          maximum: 1.0
+          description: Normalized left motor speed command.
+        right_speed:
+          type: number
+          format: float
+          minimum: -1.0
+          maximum: 1.0
+          description: Normalized right motor speed command.
+        duration_s:
+          type: number
+          format: float
+          minimum: 0.0
+          exclusiveMinimum: true
+          description: Optional duration the command should be maintained before coasting.
+    DriveQueueResponse:
+      type: object
+      required:
+        - status
+        - queue_depth
+      properties:
+        status:
+          type: string
+          enum: [queued]
+        queue_depth:
+          type: integer
+          minimum: 0
+          description: Number of drive commands waiting to execute (including the new command).
+    PanTiltCommand:
+      type: object
+      required:
+        - pan_deg
+        - tilt_deg
+      properties:
+        pan_deg:
+          type: number
+          format: float
+          minimum: -90
+          maximum: 90
+          description: Target pan angle in degrees.
+        tilt_deg:
+          type: number
+          format: float
+          minimum: -45
+          maximum: 45
+          description: Target tilt angle in degrees.
+    PanTiltState:
+      type: object
+      required:
+        - pan_deg
+        - tilt_deg
+      properties:
+        pan_deg:
+          type: number
+          format: float
+        tilt_deg:
+          type: number
+          format: float
+    UltrasonicTelemetry:
+      type: object
+      required:
+        - distance_m
+        - valid
+        - history
+      properties:
+        distance_m:
+          type: number
+          format: float
+          description: Most recent measured distance in metres.
+        valid:
+          type: boolean
+          description: Whether the most recent reading passed outlier rejection.
+        history:
+          type: array
+          items:
+            type: object
+            required:
+              - distance_m
+              - valid
+            properties:
+              distance_m:
+                type: number
+                format: float
+              valid:
+                type: boolean
+          description: FIFO list of recent valid readings.
+    LineTelemetry:
+      type: object
+      required:
+        - left
+        - right
+        - on_line
+      properties:
+        left:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+        right:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+        on_line:
+          type: boolean
+          description: Whether either sensor currently detects the track.
+    ControlConfig:
+      type: object
+      required:
+        - ingress_rate_limit
+        - execution_rate_limit
+        - queue_maxsize
+        - allowed_networks
+      properties:
+        ingress_rate_limit:
+          type: object
+          required:
+            - rate_per_second
+            - burst
+          properties:
+            rate_per_second:
+              type: number
+              format: float
+              minimum: 0.1
+            burst:
+              type: integer
+              minimum: 1
+        execution_rate_limit:
+          type: object
+          required:
+            - rate_per_second
+            - burst
+          properties:
+            rate_per_second:
+              type: number
+              format: float
+              minimum: 0.1
+            burst:
+              type: integer
+              minimum: 1
+        queue_maxsize:
+          type: integer
+          minimum: 1
+        allowed_networks:
+          type: array
+          items:
+            type: string
+            format: ipv4
+            description: CIDR blocks permitted to access the API.
+paths:
+  /drive/differential:
+    post:
+      summary: Queue a differential-drive command
+      description: |
+        Adds a normalized left/right motor speed command to the execution queue. The
+        queue is drained by a worker that obeys the configured L293D-safe rate limit.
+      operationId: queueDifferentialDrive
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DifferentialDriveCommand'
+      responses:
+        '202':
+          description: Command accepted and queued for execution.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriveQueueResponse'
+        '401':
+          description: Missing or invalid API key.
+        '403':
+          description: Client is not on an approved local network.
+        '429':
+          description: Command ingestion rate exceeded safe limit.
+  /drive/stop:
+    post:
+      summary: Coast both motors to a stop
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Motors commanded to coast.
+  /drive/brake:
+    post:
+      summary: Short the motors for an emergency brake
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Motors commanded to brake.
+  /drive/emergency-stop:
+    post:
+      summary: Engage the emergency stop latch
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Emergency stop engaged and queued commands cleared.
+  /drive/reset:
+    post:
+      summary: Reset the emergency stop latch
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Emergency stop cleared.
+  /pan-tilt/position:
+    post:
+      summary: Move the pan/tilt bracket to the requested angles
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PanTiltCommand'
+      responses:
+        '200':
+          description: Updated pan/tilt state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanTiltState'
+  /telemetry/ultrasonic:
+    get:
+      summary: Fetch the latest ultrasonic range telemetry
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Latest filtered distance reading.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UltrasonicTelemetry'
+  /telemetry/line:
+    get:
+      summary: Fetch the latest line-follow sensor telemetry
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Current normalized reflectance readings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LineTelemetry'
+  /config:
+    get:
+      summary: Retrieve the current control service configuration
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Current rate limiting and network configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlConfig'
+    patch:
+      summary: Update mutable control configuration values
+      description: |
+        Allows adjusting rate limits and queue size during development. Production
+        systems should manage configuration through infrastructure tooling.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ingress_rate_limit:
+                  $ref: '#/components/schemas/ControlConfig/properties/ingress_rate_limit'
+                execution_rate_limit:
+                  $ref: '#/components/schemas/ControlConfig/properties/execution_rate_limit'
+                queue_maxsize:
+                  type: integer
+                  minimum: 1
+      responses:
+        '200':
+          description: Updated configuration snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlConfig'
+---
+asyncapi: 2.6.0
+info:
+  title: Robby Control Telemetry Streams
+  version: 0.1.0
+  description: AsyncAPI definition for optional MQTT/WebSocket telemetry feeds.
+servers:
+  production:
+    url: mqtts://robby-control.local:8883
+    protocol: mqtt
+    description: Secure MQTT broker exposed on the local network.
+channels:
+  telemetry/ultrasonic:
+    subscribe:
+      summary: Subscribe to filtered ultrasonic telemetry events
+      message:
+        name: UltrasonicTelemetry
+        payload:
+          $ref: '#/components/schemas/UltrasonicTelemetry'
+  telemetry/line:
+    subscribe:
+      summary: Subscribe to line-follow sensor telemetry events
+      message:
+        name: LineTelemetry
+        payload:
+          $ref: '#/components/schemas/LineTelemetry'
+  control/estop:
+    publish:
+      summary: Broadcast emergency stop events to monitoring systems
+      message:
+        name: EmergencyStopEvent
+        payload:
+          type: object
+          required:
+            - engaged
+            - timestamp
+          properties:
+            engaged:
+              type: boolean
+            timestamp:
+              type: string
+              format: date-time
+components:
+  schemas:
+    UltrasonicTelemetry:
+      type: object
+      required:
+        - distance_m
+        - valid
+        - history
+      properties:
+        distance_m:
+          type: number
+          format: float
+        valid:
+          type: boolean
+        history:
+          type: array
+          items:
+            type: number
+            format: float
+    LineTelemetry:
+      type: object
+      required:
+        - left
+        - right
+        - on_line
+      properties:
+        left:
+          type: number
+          format: float
+        right:
+          type: number
+          format: float
+        on_line:
+          type: boolean
