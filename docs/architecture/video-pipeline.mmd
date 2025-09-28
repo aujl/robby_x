@@ -1,0 +1,16 @@
+---
+title: PiCam Video Pipeline
+---
+sequenceDiagram
+    participant Camera as PiCam Sensor
+    participant Encoder as GPU H.264 Encoder
+    participant StreamSvc as Video Stream Service
+    participant Broker as Message Broker
+    participant UI as Web Client Player
+
+    Camera->>Encoder: Capture frame (30 FPS target)
+    Encoder->>StreamSvc: RTP/H.264 packets
+    StreamSvc->>Broker: Publish low-latency stream (WebRTC/SRT)
+    Broker->>UI: Deliver adaptive stream
+    UI-->>StreamSvc: Stats (bitrate, dropped frames)
+    StreamSvc-->>Encoder: Adjust bitrate/framerate

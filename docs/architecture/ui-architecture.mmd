@@ -1,0 +1,26 @@
+---
+title: Teleoperation UI Architecture
+---
+flowchart TD
+    subgraph Frontend[Frontend]
+        Layout["Responsive Layout"]
+        ControlPanel["Control Panel\n(Gamepad + Touch)"]
+        VideoPlayer["WebRTC Video Player"]
+        MetricsHUD["Latency & Telemetry HUD"]
+        Settings["Session Settings"]
+    end
+    subgraph Backend[Backend APIs]
+        ControlAPI["/api/control"]
+        TelemetryAPI["/api/telemetry"]
+        VideoSignaling["/api/signaling"]
+    end
+    User["Driver"]
+    User --> Layout
+    Layout --> ControlPanel
+    Layout --> VideoPlayer
+    Layout --> MetricsHUD
+    Layout --> Settings
+    ControlPanel --> ControlAPI
+    Settings --> ControlAPI
+    MetricsHUD --> TelemetryAPI
+    VideoPlayer --> VideoSignaling

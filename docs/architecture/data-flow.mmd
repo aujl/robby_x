@@ -1,0 +1,28 @@
+---
+title: End-to-End Data Flow
+---
+flowchart LR
+    Driver["Driver Inputs"]
+    UI["Web UI"]
+    WS["WebSocket Gateway"]
+    Safety["Safety Manager"]
+    Motor["Motor Controller"]
+    Sensors["Sensors"]
+    Telemetry["Telemetry Stream"]
+    Video["Video Service"]
+    PiCam["PiCam"]
+    Storage["Time-series Storage"]
+    Analytics["Analytics Dashboard"]
+
+    Driver --> UI
+    UI --> WS
+    WS --> Safety
+    Safety --> Motor
+    Motor --> Sensors
+    Sensors --> Telemetry
+    Telemetry --> UI
+    Telemetry --> Storage
+    Storage --> Analytics
+    PiCam --> Video
+    Video --> UI
+    Video --> Storage

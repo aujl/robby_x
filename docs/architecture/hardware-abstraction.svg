@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540">
+  <style>
+    .title { font: bold 24px sans-serif; }
+    .label { font: 16px sans-serif; }
+    .sub { fill: #eef5ff; stroke: #4a78c2; stroke-width: 2; }
+    .node { fill: #ffffff; stroke: #2c3e50; stroke-width: 2; }
+    .link { stroke: #2c3e50; stroke-width: 2; marker-end: url(#arrow); }
+    .link-line { stroke: #2c3e50; stroke-width: 2; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="3" orient="auto">
+      <path d="M0,0 L10,3 L0,6 z" fill="#2c3e50" />
+    </marker>
+  </defs>
+  <text x="30" y="40" class="title">Hardware Abstraction Layers</text>
+  <rect class="sub" x="40" y="80" width="320" height="340" rx="16" ry="16" />
+  <text x="60" y="110" class="label">Raspberry Pi 4</text>
+  <rect class="node" x="80" y="140" width="240" height="60" rx="12" ry="12" />
+  <text x="120" y="176" class="label">GPIO Pins</text>
+  <rect class="node" x="80" y="220" width="240" height="60" rx="12" ry="12" />
+  <text x="128" y="256" class="label">I2C Bus</text>
+  <rect class="node" x="80" y="300" width="240" height="60" rx="12" ry="12" />
+  <text x="96" y="336" class="label">CSI Camera Port</text>
+
+  <rect class="node" x="420" y="120" width="200" height="60" rx="12" ry="12" />
+  <text x="432" y="156" class="label">Motor Driver HAT</text>
+  <line class="link-line" x1="320" y1="170" x2="420" y2="150" />
+
+  <rect class="node" x="420" y="210" width="200" height="60" rx="12" ry="12" />
+  <text x="428" y="246" class="label">Ultrasonic Sensor</text>
+  <line class="link-line" x1="320" y1="250" x2="420" y2="240" />
+
+  <rect class="node" x="420" y="300" width="200" height="60" rx="12" ry="12" />
+  <text x="424" y="336" class="label">Pi Camera Module</text>
+  <line class="link-line" x1="320" y1="330" x2="420" y2="330" />
+
+  <rect class="node" x="680" y="180" width="200" height="60" rx="12" ry="12" />
+  <text x="692" y="216" class="label">Hardware Abstraction</text>
+  <text x="692" y="236" class="label">Service</text>
+  <line class="link" x1="640" y1="150" x2="680" y2="210" />
+  <line class="link" x1="640" y1="240" x2="680" y2="210" />
+  <line class="link" x1="640" y1="330" x2="680" y2="210" />
+
+  <rect class="node" x="680" y="270" width="200" height="60" rx="12" ry="12" />
+  <text x="696" y="306" class="label">Control Service API</text>
+  <line class="link" x1="780" y1="270" x2="780" y2="240" />
+
+  <rect class="node" x="680" y="360" width="200" height="60" rx="12" ry="12" />
+  <text x="688" y="396" class="label">Video Streaming Service</text>
+  <line class="link" x1="780" y1="360" x2="780" y2="240" />
+</svg>
