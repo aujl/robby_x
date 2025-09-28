@@ -121,7 +121,9 @@ exit 0
     return script_path
 
 
-def _run_check_services(tmp_path: Path, inactive_service: str | None) -> subprocess.CompletedProcess[str]:
+def _run_check_services(
+    tmp_path: Path, inactive_service: str | None
+) -> subprocess.CompletedProcess[str]:
     _write_fake_systemctl(tmp_path, inactive_service)
     env = {"PATH": f"{tmp_path}:{os.environ.get('PATH', '')}"}
     script = SCRIPTS_DIR / "check_services.sh"
@@ -137,7 +139,12 @@ def _run_check_services(tmp_path: Path, inactive_service: str | None) -> subproc
 def test_check_services_script_reports_healthy(tmp_path: Path) -> None:
     result = _run_check_services(tmp_path, inactive_service=None)
     assert result.returncode == 0, result.stderr
-    for service in ("camjam-control.service", "camjam-camera.service", "camjam-diagnostics.service", "pigpiod.service"):
+    for service in (
+        "camjam-control.service",
+        "camjam-camera.service",
+        "camjam-diagnostics.service",
+        "pigpiod.service",
+    ):
         assert service in result.stdout
 
 

@@ -13,7 +13,7 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 
 @dataclass
@@ -35,7 +35,7 @@ def build_context(name: str, output: str) -> HilRunContext:
     return HilRunContext(name=name, output_dir=output_dir, dry_run=dry_run, timestamp=time.time())
 
 
-def write_payload(context: HilRunContext, payload: Dict[str, Any]) -> None:
+def write_payload(context: HilRunContext, payload: dict[str, Any]) -> None:
     metadata = {
         "metadata": {
             "dry_run": context.dry_run,
@@ -47,7 +47,7 @@ def write_payload(context: HilRunContext, payload: Dict[str, Any]) -> None:
     context.output_path.write_text(json.dumps(output, indent=2))
 
 
-def base_payload(context: HilRunContext) -> Dict[str, Any]:
+def base_payload(context: HilRunContext) -> dict[str, Any]:
     return {
         "summary": {
             "status": "skipped" if context.dry_run else "pending",

@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from .motor_controller import CamJamMotorController
-from .servo_controller import CamJamPanTiltServos
 from .sensors.encoders import WheelEncoders
 from .sensors.ultrasonic import UltrasonicRanger
+from .servo_controller import CamJamPanTiltServos
 
 __all__ = [
     "CamJamMotorController",

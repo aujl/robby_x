@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Awaitable, Callable, Optional, Tuple
 
-
-SampleReader = Callable[[], Awaitable[Tuple[int, int, float]]]
+SampleReader = Callable[[], Awaitable[tuple[int, int, float]]]
 
 
 @dataclass
@@ -46,16 +45,15 @@ class WheelEncoders:
         self._wheel_radius = wheel_radius
         self._min_interval = min_interval
 
-        self._last_valid_sample: Optional[Tuple[int, int, float]] = None
+        self._last_valid_sample: tuple[int, int, float] | None = None
 
     def calibrate(
         self,
         *,
-        ticks_per_revolution: Optional[int] = None,
-        wheel_radius: Optional[float] = None,
+        ticks_per_revolution: int | None = None,
+        wheel_radius: float | None = None,
     ) -> None:
         """Update calibration constants for the encoder conversion."""
-
         if ticks_per_revolution is not None:
             if ticks_per_revolution <= 0:
                 raise ValueError("ticks_per_revolution must be positive")
@@ -67,7 +65,6 @@ class WheelEncoders:
 
     async def read(self) -> EncoderTelemetry:
         """Return filtered telemetry for the wheel encoders."""
-
         sample = await self._sample_reader()
         ticks_left, ticks_right, timestamp = sample
 

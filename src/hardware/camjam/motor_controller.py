@@ -22,9 +22,10 @@ calibration.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any
 
 try:  # pragma: no cover - optional dependency
     import yaml  # type: ignore
@@ -41,16 +42,24 @@ class _MotorChannel:
     forward_pin: int
     reverse_pin: int
     trim: float
-    speed_curve: Tuple[Tuple[float, float], ...]
+    speed_curve: tuple[tuple[float, float], ...]
 
 
 class _BaseBackend:
     """Interface expected from low level GPIO backends."""
 
-    def setup_motor(self, motor: _MotorChannel, frequency: int) -> None:  # pragma: no cover - abstract
+    def setup_motor(
+        self,
+        motor: _MotorChannel,
+        frequency: int,
+    ) -> None:  # pragma: no cover - abstract
         raise NotImplementedError
 
-    def command_motor(self, motor: _MotorChannel, value: float) -> None:  # pragma: no cover - abstract
+    def command_motor(
+        self,
+        motor: _MotorChannel,
+        value: float,
+    ) -> None:  # pragma: no cover - abstract
         raise NotImplementedError
 
     def brake_motor(self, motor: _MotorChannel) -> None:  # pragma: no cover - abstract
@@ -66,7 +75,13 @@ class _BaseBackend:
 class _PigpioBackend(_BaseBackend):
     """Backend implementation that talks to ``pigpio``."""
 
-    def __init__(self, pigpio_module: Any, *, host: Optional[str] = None, port: Optional[int] = None) -> None:
+    def __init__(
+        self,
+        pigpio_module: Any,
+        *,
+        host: str | None = None,
+        port: int | None = None,
+    ) -> None:
         self._pigpio = pigpio_module
         if hasattr(pigpio_module, "pi"):
             if host is None and port is None:
@@ -125,7 +140,7 @@ class _RPiGPIOBackend(_BaseBackend):
     def __init__(self, gpio_module: Any) -> None:
         self._gpio = gpio_module
         self._gpio.setmode(self._gpio.BCM)
-        self._pwm_instances: Dict[int, Any] = {}
+        self._pwm_instances: dict[int, Any] = {}
 
     def setup_motor(self, motor: _MotorChannel, frequency: int) -> None:
         self._gpio.setup(motor.forward_pin, self._gpio.OUT)
@@ -177,8 +192,8 @@ def _load_yaml_config(config_path: Path) -> Mapping[str, Any]:
         return yaml.safe_load(handle)
 
 
-def _ensure_curve(points: Iterable[Iterable[float]]) -> Tuple[Tuple[float, float], ...]:
-    curve: List[Tuple[float, float]] = []
+def _ensure_curve(points: Iterable[Iterable[float]]) -> tuple[tuple[float, float], ...]:
+    curve: list[tuple[float, float]] = []
     for entry in points:
         if len(entry) != 2:
             raise ValueError("Curve points must contain exactly two floats")
@@ -193,7 +208,7 @@ def _ensure_curve(points: Iterable[Iterable[float]]) -> Tuple[Tuple[float, float
     return tuple(curve)
 
 
-def _interpolate(curve: Sequence[Tuple[float, float]], value: float) -> float:
+def _interpolate(curve: Sequence[tuple[float, float]], value: float) -> float:
     magnitude = abs(value)
     sign = 1.0 if value >= 0 else -1.0
 
@@ -239,12 +254,12 @@ class CamJamMotorController:
     def __init__(
         self,
         *,
-        config: Optional[Mapping[str, Any]] = None,
-        config_path: Optional[Path | str] = None,
-        pigpio_module: Optional[Any] = None,
-        gpio_module: Optional[Any] = None,
-        pigpio_host: Optional[str] = None,
-        pigpio_port: Optional[int] = None,
+        config: Mapping[str, Any] | None = None,
+        config_path: Path | str | None = None,
+        pigpio_module: Any | None = None,
+        gpio_module: Any | None = None,
+        pigpio_host: str | None = None,
+        pigpio_port: int | None = None,
     ) -> None:
         if config is None:
             path = Path(config_path) if config_path else Path("config") / "camjam.yaml"
@@ -255,7 +270,7 @@ class CamJamMotorController:
         motors = config.get("motors", {})
         if not motors:
             raise ValueError("CamJam configuration must define motors")
-        self._motors: Dict[str, _MotorChannel] = {}
+        self._motors: dict[str, _MotorChannel] = {}
         for name, details in motors.items():
             channel = _MotorChannel(
                 name=name,
@@ -274,10 +289,10 @@ class CamJamMotorController:
 
     def _select_backend(
         self,
-        pigpio_module: Optional[Any],
-        gpio_module: Optional[Any],
-        pigpio_host: Optional[str],
-        pigpio_port: Optional[int],
+        pigpio_module: Any | None,
+        gpio_module: Any | None,
+        pigpio_host: str | None,
+        pigpio_port: int | None,
     ) -> _BaseBackend:
         if pigpio_module is not None:
             return _PigpioBackend(pigpio_module, host=pigpio_host, port=pigpio_port)

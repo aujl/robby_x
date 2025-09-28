@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+
 from .common import base_payload, build_context, write_payload
 
 
@@ -22,7 +23,12 @@ def _collect_motor_metrics(context_notes: list[str], laps: int) -> dict[str, obj
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run CamJam motor characterisation sweep")
     parser.add_argument("--output", default="artifacts/hil", help="Directory for result bundles")
-    parser.add_argument("--laps", type=int, default=3, help="Number of straight-line laps to execute")
+    parser.add_argument(
+        "--laps",
+        type=int,
+        default=3,
+        help="Number of straight-line laps to execute",
+    )
     parser.add_argument(
         "--track-length-m",
         type=float,
@@ -40,7 +46,10 @@ def main() -> None:
     }
 
     if context.dry_run:
-        payload["summary"]["notes"].append("Dry run – connect to the CamJam buggy and set CAMJAM_HIL_ENABLED=1 to collect data.")
+        payload["summary"]["notes"].append(
+            "Dry run – connect to the CamJam buggy and set CAMJAM_HIL_ENABLED=1 "
+            "to collect data."
+        )
     else:
         payload["summary"]["status"] = "completed"
         payload["summary"]["notes"].append(

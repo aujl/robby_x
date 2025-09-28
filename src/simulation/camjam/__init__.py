@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence, Tuple
+from typing import TypeVar
 
 from src.hardware.camjam.sensors.encoders import WheelEncoders
 from src.hardware.camjam.sensors.ultrasonic import UltrasonicRanger
 
-from .scenarios import CamJamScenario, SCENARIOS, EncoderSample, ServoSample, UltrasonicSample
+from .scenarios import SCENARIOS, CamJamScenario, EncoderSample, ServoSample, UltrasonicSample
+
+T = TypeVar("T")
 
 __all__ = [
     "CamJamSimulation",
@@ -24,20 +27,17 @@ __all__ = [
 
 def simulation_enabled() -> bool:
     """Return whether CamJam simulation mode is enabled."""
-
     value = os.getenv("CAMJAM_SIMULATION", "0").strip().lower()
     return value in {"1", "true", "yes", "on"}
 
 
-def list_scenarios() -> List[str]:
+def list_scenarios() -> list[str]:
     """Return the available scenario slugs."""
-
     return sorted(SCENARIOS.keys())
 
 
 def load_scenario(slug: str) -> CamJamScenario:
     """Retrieve a scenario definition by slug."""
-
     try:
         return SCENARIOS[slug]
     except KeyError as exc:  # pragma: no cover - defensive branch
@@ -78,12 +78,12 @@ class ScenarioPlayback:
     def next_servo_sample(self) -> ServoSample:
         return self._next_sample(self._scenario.servo_samples, self._servo_index)
 
-    def expected_motor_command(self) -> Tuple[float, float]:
+    def expected_motor_command(self) -> tuple[float, float]:
         sample = self._next_sample(self._scenario.motor_commands, self._motor_index)
         return (sample.left_speed, sample.right_speed)
 
     @staticmethod
-    def _next_sample(sequence: Sequence, tracker: _IndexTracker):
+    def _next_sample(sequence: Sequence[T], tracker: _IndexTracker) -> T:
         if not sequence:  # pragma: no cover - scenarios always populate sequences
             raise RuntimeError("Scenario sequence is empty")
         idx = min(tracker.value, len(sequence) - 1)
@@ -97,10 +97,11 @@ class SimulatedMotorController:
     """Drop-in replacement for :class:`CamJamMotorController` in simulation mode."""
 
     def __init__(self, playback: ScenarioPlayback) -> None:
+        """Initialise the simulated controller with playback state."""
         self._playback = playback
         self._estop = False
-        self.command_log: List[Tuple[float, float]] = []
-        self.expected_log: List[Tuple[float, float]] = []
+        self.command_log: list[tuple[float, float]] = []
+        self.expected_log: list[tuple[float, float]] = []
 
     def drive(self, left_speed: float, right_speed: float) -> None:
         if self._estop:
@@ -139,7 +140,7 @@ class _SimulatedEncoderSampleReader:
     def __init__(self, playback: ScenarioPlayback) -> None:
         self._playback = playback
 
-    async def __call__(self) -> Tuple[int, int, float]:
+    async def __call__(self) -> tuple[int, int, float]:
         sample = self._playback.next_encoder_sample()
         return (sample.ticks_left, sample.ticks_right, sample.timestamp)
 
@@ -150,7 +151,8 @@ class _SimulatedUltrasonicEchoReader:
 
     async def __call__(self) -> float:
         sample = self._playback.next_ultrasonic_sample()
-        # Convert distance to echo duration using the same nominal speed of sound as UltrasonicRanger
+        # Convert distance to echo duration using the same nominal speed of sound
+        # as UltrasonicRanger
         return (2.0 * sample.distance_m) / 343.0
 
 
@@ -161,8 +163,8 @@ class SimulatedPanTiltServos:
         self,
         playback: ScenarioPlayback,
         *,
-        pan_limits: Tuple[float, float] = (-90.0, 90.0),
-        tilt_limits: Tuple[float, float] = (-45.0, 45.0),
+        pan_limits: tuple[float, float] = (-90.0, 90.0),
+        tilt_limits: tuple[float, float] = (-45.0, 45.0),
     ) -> None:
         self._playback = playback
         self._pan_limits = pan_limits
@@ -179,27 +181,26 @@ class SimulatedPanTiltServos:
         return self._tilt
 
     @property
-    def pan_limits(self) -> Tuple[float, float]:
+    def pan_limits(self) -> tuple[float, float]:
         return self._pan_limits
 
     @property
-    def tilt_limits(self) -> Tuple[float, float]:
+    def tilt_limits(self) -> tuple[float, float]:
         return self._tilt_limits
 
     def move_to(self, pan: float, tilt: float) -> None:
         self._pan = self._clamp(pan, self._pan_limits)
         self._tilt = self._clamp(tilt, self._tilt_limits)
 
-    def scripted_positions(self) -> Iterable[Tuple[float, float]]:
+    def scripted_positions(self) -> Iterable[tuple[float, float]]:
         """Yield the scripted servo positions without consuming playback state."""
-
         return (
             (sample.pan_angle, sample.tilt_angle)
             for sample in self._playback.scenario.servo_samples
         )
 
     @staticmethod
-    def _clamp(value: float, limits: Tuple[float, float]) -> float:
+    def _clamp(value: float, limits: tuple[float, float]) -> float:
         return max(limits[0], min(limits[1], value))
 
 

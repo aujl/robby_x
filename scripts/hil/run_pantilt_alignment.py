@@ -4,7 +4,6 @@ import argparse
 
 from .common import base_payload, build_context, write_payload
 
-
 PRESETS = {
     "scan": [(-30.0, -10.0), (0.0, 0.0), (30.0, 10.0)],
     "focus": [(0.0, 5.0)],
@@ -14,7 +13,8 @@ PRESETS = {
 def _alignment_plan(preset: str, notes: list[str]) -> dict[str, object]:
     sweeps = PRESETS.get(preset, PRESETS["scan"])
     notes.append(
-        "Mount calibration board at 1 m distance; align crosshair with PanTilt zero before recording."
+        "Mount calibration board at 1 m distance; align crosshair with PanTilt "
+        "zero before recording."
     )
     notes.append("Use overlay annotator to confirm ±2° accuracy across sweep waypoints.")
     return {
@@ -40,7 +40,9 @@ def main() -> None:
         )
     else:
         payload["summary"]["status"] = "completed"
-        payload["summary"]["notes"].append("PanTilt sweep complete – attach screenshot evidence in artefacts.")
+        payload["summary"]["notes"].append(
+            "PanTilt sweep complete – attach screenshot evidence in artefacts."
+        )
 
     write_payload(context, payload)
 

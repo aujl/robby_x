@@ -1,24 +1,24 @@
 import asyncio
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import pytest
 
-
-pytestmark = pytest.mark.camjam_unit
-
 from src.api.control_service import (
-    ControlServiceConfig,
     ControlServiceApp,
+    ControlServiceConfig,
     RateLimitSettings,
     create_app,
 )
 
 
+pytestmark = pytest.mark.camjam_unit
+
+
 class StubMotorController:
     def __init__(self) -> None:
-        self.commands: List[Tuple[str, Tuple[Any, ...]]] = []
+        self.commands: list[tuple[str, tuple[Any, ...]]] = []
         self.estopped = False
 
     def drive(self, left: float, right: float) -> None:
@@ -57,10 +57,10 @@ class StubUltrasonicReading:
 
 class StubUltrasonicRanger:
     def __init__(self) -> None:
-        self._history: List[StubUltrasonicReading] = []
+        self._history: list[StubUltrasonicReading] = []
 
     @property
-    def history(self) -> List[StubUltrasonicReading]:
+    def history(self) -> list[StubUltrasonicReading]:
         return self._history
 
     async def read(self) -> StubUltrasonicReading:
@@ -82,7 +82,7 @@ class StubLineFollower:
 
 
 @pytest.fixture
-def control_app() -> Tuple[ControlServiceApp, Dict[str, Any], asyncio.AbstractEventLoop]:
+def control_app() -> tuple[ControlServiceApp, dict[str, Any], asyncio.AbstractEventLoop]:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 

@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import importlib
 import sys
+from collections.abc import Generator
 from types import SimpleNamespace
-from typing import Generator
 from unittest.mock import MagicMock, call
 
 import pytest
-
 
 pytestmark = pytest.mark.camjam_mocked_hw
 
@@ -110,7 +109,9 @@ def test_start_stop_stream_configures_camera_and_encoder():
 def test_servo_alignment_applies_offsets_on_commands():
     camera_service = import_service()
     servos = MagicMock()
-    service = camera_service.PanTiltCameraService(servos=servos, pan_offset=1.5, tilt_offset=-0.5)
+    service = camera_service.PanTiltCameraService(
+        servos=servos, pan_offset=1.5, tilt_offset=-0.5
+    )
 
     service.command_servos(-12.0, 22.0)
     servos.move_to.assert_called_once_with(-10.5, 21.5)
@@ -124,7 +125,9 @@ def test_get_frame_returns_live_when_streaming_and_fallback_otherwise():
     servos = MagicMock()
     still_image = b"fallback"
     fallback_provider = MagicMock(return_value=still_image)
-    service = camera_service.PanTiltCameraService(servos=servos, still_image_provider=fallback_provider)
+    service = camera_service.PanTiltCameraService(
+        servos=servos, still_image_provider=fallback_provider
+    )
 
     frame_without_stream = service.get_frame()
     assert frame_without_stream == still_image
