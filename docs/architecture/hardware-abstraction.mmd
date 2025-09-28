@@ -1,0 +1,23 @@
+---
+title: Hardware Abstraction Layers
+---
+flowchart TD
+    subgraph Pi["Raspberry Pi 4"]
+        GPIO[GPIO Pins]
+        I2C[I2C Bus]
+        CSI[CSI Camera Port]
+    end
+    MotorDriver["Motor Driver HAT"]
+    Ultrasonic["Ultrasonic Sensor"]
+    PiCam["Raspberry Pi Camera Module"]
+    Firmware["Hardware Abstraction Service"]
+    MotorDriver --- GPIO
+    Ultrasonic --- GPIO
+    PiCam --- CSI
+    Firmware --> GPIO
+    Firmware --> I2C
+    Firmware --> CSI
+    ControlService["Control Service API"]
+    VideoService["Video Streaming Service"]
+    ControlService --> Firmware
+    VideoService --> Firmware

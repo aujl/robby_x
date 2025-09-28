@@ -1,0 +1,27 @@
+---
+title: Control Services Components
+---
+flowchart LR
+    subgraph ControlPlane[Control Plane]
+        InputGateway["Input Gateway\n(WebSocket)"]
+        CommandRouter["Command Router"]
+        SafetyManager["Safety Manager"]
+        TelemetryBus["Telemetry Publisher"]
+    end
+    subgraph Runtime[Runtime]
+        MotorCtrl["Motor Control Adapter"]
+        SensorReader["Sensor Reader"]
+        Heartbeat["Heartbeat Monitor"]
+    end
+    UI["Driver UI"]
+    Logger["Event Logger"]
+    UI --> InputGateway
+    InputGateway --> CommandRouter
+    CommandRouter --> SafetyManager
+    SafetyManager --> MotorCtrl
+    SensorReader --> TelemetryBus
+    MotorCtrl --> TelemetryBus
+    Heartbeat --> SafetyManager
+    TelemetryBus --> UI
+    TelemetryBus --> Logger
+    SafetyManager --> Logger
