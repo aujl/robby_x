@@ -22,15 +22,18 @@ calibration.
 
 from __future__ import annotations
 
+import importlib
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from types import TracebackType
+from typing import Any, cast
 
+yaml: Any | None
 try:  # pragma: no cover - optional dependency
-    import yaml  # type: ignore
+    yaml = importlib.import_module("yaml")
 except ModuleNotFoundError:  # pragma: no cover - exercised when PyYAML is missing
-    yaml = None  # type: ignore
+    yaml = None
 
 
 @dataclass(frozen=True)
@@ -189,10 +192,10 @@ def _load_yaml_config(config_path: Path) -> Mapping[str, Any]:
     if yaml is None:
         raise RuntimeError("PyYAML is required to load CamJam configuration files")
     with config_path.open("r", encoding="utf-8") as handle:
-        return yaml.safe_load(handle)
+        return cast(Mapping[str, Any], yaml.safe_load(handle))
 
 
-def _ensure_curve(points: Iterable[Iterable[float]]) -> tuple[tuple[float, float], ...]:
+def _ensure_curve(points: Iterable[Sequence[float]]) -> tuple[tuple[float, float], ...]:
     curve: list[tuple[float, float]] = []
     for entry in points:
         if len(entry) != 2:
@@ -298,16 +301,16 @@ class CamJamMotorController:
             return _PigpioBackend(pigpio_module, host=pigpio_host, port=pigpio_port)
 
         try:  # pragma: no branch - we only want the first available backend
-            import pigpio as pigpio_runtime  # type: ignore
-
-            return _PigpioBackend(pigpio_runtime, host=pigpio_host, port=pigpio_port)
+            pigpio_runtime = importlib.import_module("pigpio")
         except ImportError:
-            pass
+            pigpio_runtime = None
+        else:
+            return _PigpioBackend(pigpio_runtime, host=pigpio_host, port=pigpio_port)
 
-        module = gpio_module
+        module: Any | None = gpio_module
         if module is None:
             try:
-                import RPi.GPIO as module  # type: ignore
+                module = importlib.import_module("RPi.GPIO")
             except ImportError as exc:  # pragma: no cover - executed only on systems without GPIO
                 raise RuntimeError("Neither pigpio nor RPi.GPIO are available") from exc
         return _RPiGPIOBackend(module)
@@ -374,5 +377,10 @@ class CamJamMotorController:
     def __enter__(self) -> "CamJamMotorController":
         return self
 
-    def __exit__(self, exc_type, exc, tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         self.close()

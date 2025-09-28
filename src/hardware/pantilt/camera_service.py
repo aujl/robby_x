@@ -48,8 +48,8 @@ class PanTiltCameraService:
         self._still_image_provider = still_image_provider
         self._lock = threading.Lock()
         self._last_command = ServoCommand(0.0, 0.0)
-        self._camera = None
-        self._active_output = None
+        self._camera: Any | None = None
+        self._active_output: Any | None = None
         self._is_streaming = False
         self._last_error: Exception | None = None
         self._fallback_frame: bytes | None = None
@@ -63,9 +63,11 @@ class PanTiltCameraService:
             mjpeg_encoder_cls = getattr(picamera2_module, "MJPEGEncoder")
         file_output_cls = outputs_module.FileOutput
 
-        self._camera_factory = camera_factory or picamera_cls
-        self._encoder_factory = encoder_factory or (lambda: mjpeg_encoder_cls())
-        self._output_factory = output_factory or (lambda destination: file_output_cls(destination))
+        self._camera_factory: Callable[[], Any] = camera_factory or picamera_cls
+        self._encoder_factory: Callable[[], Any] = encoder_factory or (lambda: mjpeg_encoder_cls())
+        self._output_factory: Callable[[Any], Any] = output_factory or (
+            lambda destination: file_output_cls(destination)
+        )
 
     @property
     def is_streaming(self) -> bool:

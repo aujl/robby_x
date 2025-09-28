@@ -2,21 +2,33 @@
 
 from __future__ import annotations
 
+import importlib
 from collections import deque
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import Any, Protocol, cast
 
+structlog: Any | None
 try:  # pragma: no cover - exercised through fallback logger in tests
-    import structlog  # type: ignore
+    structlog = importlib.import_module("structlog")
 except ModuleNotFoundError:  # pragma: no cover - structlog is optional for unit tests
-    structlog = None  # type: ignore
+    structlog = None
 
 
-def _get_logger(name: str):
+class DiagnosticsLogger(Protocol):
+    """Contract shared by the real and fallback loggers."""
+
+    def bind(self, **_: Any) -> "DiagnosticsLogger": ...
+
+    def info(self, _event: str, **_: Any) -> None: ...
+
+    def warning(self, _event: str, **_: Any) -> None: ...
+
+
+def _get_logger(name: str) -> DiagnosticsLogger:
     if structlog is None:  # pragma: no cover - deterministic branch during unit tests
         return _FallbackLogger(name)
-    return structlog.get_logger(name)
+    return cast(DiagnosticsLogger, structlog.get_logger(name))
 
 
 class _FallbackLogger:
