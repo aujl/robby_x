@@ -5,8 +5,9 @@ from __future__ import annotations
 import importlib
 import io
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Optional, Protocol, Tuple
+from typing import Any, Protocol
 
 
 @dataclass
@@ -30,15 +31,15 @@ class PanTiltCameraService:
     def __init__(
         self,
         *,
-        servos: Optional[ServoControllerProtocol] = None,
-        resolution: Tuple[int, int] = (1280, 720),
+        servos: ServoControllerProtocol | None = None,
+        resolution: tuple[int, int] = (1280, 720),
         framerate: int = 30,
         pan_offset: float = 0.0,
         tilt_offset: float = 0.0,
-        camera_factory: Optional[Callable[[], Any]] = None,
-        encoder_factory: Optional[Callable[[], Any]] = None,
-        output_factory: Optional[Callable[[Any], Any]] = None,
-        still_image_provider: Optional[Callable[[], bytes]] = None,
+        camera_factory: Callable[[], Any] | None = None,
+        encoder_factory: Callable[[], Any] | None = None,
+        output_factory: Callable[[Any], Any] | None = None,
+        still_image_provider: Callable[[], bytes] | None = None,
     ) -> None:
         self._servos = servos
         self._resolution = resolution
@@ -51,17 +52,17 @@ class PanTiltCameraService:
         self._camera = None
         self._active_output = None
         self._is_streaming = False
-        self._last_error: Optional[Exception] = None
-        self._fallback_frame: Optional[bytes] = None
+        self._last_error: Exception | None = None
+        self._fallback_frame: bytes | None = None
 
         picamera2_module = importlib.import_module("picamera2")
         outputs_module = importlib.import_module("picamera2.outputs")
 
-        picamera_cls = getattr(picamera2_module, "Picamera2")
+        picamera_cls = picamera2_module.Picamera2
         mjpeg_encoder_cls = getattr(picamera2_module, "MjpegEncoder", None)
         if mjpeg_encoder_cls is None:
             mjpeg_encoder_cls = getattr(picamera2_module, "MJPEGEncoder")
-        file_output_cls = getattr(outputs_module, "FileOutput")
+        file_output_cls = outputs_module.FileOutput
 
         self._camera_factory = camera_factory or picamera_cls
         self._encoder_factory = encoder_factory or (lambda: mjpeg_encoder_cls())
@@ -69,18 +70,22 @@ class PanTiltCameraService:
 
     @property
     def is_streaming(self) -> bool:
+        """Return whether the camera is actively streaming video."""
         return self._is_streaming
 
     @property
-    def last_error(self) -> Optional[Exception]:
+    def last_error(self) -> Exception | None:
+        """Return the last streaming error encountered, if any."""
         return self._last_error
 
     def command_servos(self, pan: float, tilt: float) -> None:
+        """Command the servos to the requested angles with alignment offsets applied."""
         with self._lock:
             self._last_command = ServoCommand(pan, tilt)
             self._apply_servo_alignment()
 
     def start_stream(self, destination: Any) -> None:
+        """Begin streaming video to the provided destination sink."""
         with self._lock:
             if self._is_streaming:
                 return
@@ -123,6 +128,7 @@ class PanTiltCameraService:
             self._apply_servo_alignment()
 
     def stop_stream(self) -> None:
+        """Stop any active video stream and release camera resources."""
         with self._lock:
             camera = self._camera
             if not camera:
@@ -143,6 +149,7 @@ class PanTiltCameraService:
                         pass
 
     def get_frame(self) -> bytes:
+        """Capture a JPEG frame from the stream or return a cached fallback image."""
         with self._lock:
             if self._is_streaming and self._camera:
                 buffer = io.BytesIO()

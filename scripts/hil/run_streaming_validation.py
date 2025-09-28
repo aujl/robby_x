@@ -34,7 +34,9 @@ def main() -> None:
         )
     else:
         payload["summary"]["status"] = "completed"
-        payload["summary"]["notes"].append("Streaming validation complete – attach bitrate logs to artefacts.")
+        payload["summary"]["notes"].append(
+            "Streaming validation complete – attach bitrate logs to artefacts."
+        )
 
     write_payload(context, payload)
 

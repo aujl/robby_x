@@ -1,22 +1,22 @@
+from __future__ import annotations
+
 import asyncio
 
 import pytest
-
-
-pytestmark = pytest.mark.camjam_simulation
-
-from src.simulation.camjam import (
-    list_scenarios,
-    load_scenario,
-    reset_simulation_context,
-    simulation_enabled,
-)
 from src.hardware.camjam import (
     get_motor_controller,
     get_pan_tilt_servos,
     get_ultrasonic_ranger,
     get_wheel_encoders,
 )
+from src.simulation.camjam import (
+    list_scenarios,
+    load_scenario,
+    reset_simulation_context,
+    simulation_enabled,
+)
+
+pytestmark = pytest.mark.camjam_simulation
 
 
 @pytest.fixture(autouse=True)

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Tuple
 
 
 @dataclass(frozen=True)
@@ -45,13 +44,13 @@ class CamJamScenario:
     slug: str
     label: str
     description: str
-    encoder_samples: Tuple[EncoderSample, ...]
-    ultrasonic_samples: Tuple[UltrasonicSample, ...]
-    servo_samples: Tuple[ServoSample, ...]
-    motor_commands: Tuple[MotorCommand, ...]
+    encoder_samples: tuple[EncoderSample, ...]
+    ultrasonic_samples: tuple[UltrasonicSample, ...]
+    servo_samples: tuple[ServoSample, ...]
+    motor_commands: tuple[MotorCommand, ...]
 
 
-def _build_scenarios() -> Dict[str, CamJamScenario]:
+def _build_scenarios() -> dict[str, CamJamScenario]:
     """Return the catalogue of baked-in simulation scenarios."""
 
     idle = CamJamScenario(
@@ -259,5 +258,5 @@ def _build_scenarios() -> Dict[str, CamJamScenario]:
     }
 
 
-SCENARIOS: Dict[str, CamJamScenario] = _build_scenarios()
+SCENARIOS: dict[str, CamJamScenario] = _build_scenarios()
 

@@ -24,7 +24,9 @@ def _sensor_expectations(notes: list[str]) -> dict[str, object]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Validate CamJam sensor suite against calibration baselines")
+    parser = argparse.ArgumentParser(
+        description="Validate CamJam sensor suite against calibration baselines"
+    )
     parser.add_argument("--output", default="artifacts/hil", help="Directory for result bundles")
     parser.add_argument("--course", default="figure-eight", help="Course preset to document")
     args = parser.parse_args()

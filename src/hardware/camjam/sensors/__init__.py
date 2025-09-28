@@ -1,8 +1,8 @@
 """Sensor interfaces for the CamJam EduKit."""
 
-from .ultrasonic import UltrasonicRanger, UltrasonicReading
+from .encoders import EncoderTelemetry, WheelEncoders
 from .line_follow import LineFollower, LineTelemetry
-from .encoders import WheelEncoders, EncoderTelemetry
+from .ultrasonic import UltrasonicRanger, UltrasonicReading
 
 __all__ = [
     "UltrasonicRanger",

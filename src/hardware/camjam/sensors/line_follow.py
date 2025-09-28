@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Awaitable, Callable, Dict, Optional, Tuple
-
 
 AnalogReader = Callable[[], Awaitable[float]]
 
@@ -26,11 +25,12 @@ class LineFollower:
         *,
         left_reader: AnalogReader,
         right_reader: AnalogReader,
-        calibration: Optional[Dict[str, Tuple[float, float]]] = None,
+        calibration: dict[str, tuple[float, float]] | None = None,
         ema_alpha: float = 0.5,
         active_threshold: float = 0.6,
         inactive_threshold: float = 0.4,
     ) -> None:
+        """Initialise the filter with optional calibration and hysteresis settings."""
         if not 0.0 < ema_alpha <= 1.0:
             raise ValueError("ema_alpha must be between 0 and 1")
         if inactive_threshold > active_threshold:
@@ -46,18 +46,17 @@ class LineFollower:
         self._calibration_left = calibration.get("left", (0.0, 1.0))
         self._calibration_right = calibration.get("right", (0.0, 1.0))
 
-        self._ema_left: Optional[float] = None
-        self._ema_right: Optional[float] = None
+        self._ema_left: float | None = None
+        self._ema_right: float | None = None
         self._on_line = False
 
     def set_calibration(
         self,
         *,
-        left: Optional[Tuple[float, float]] = None,
-        right: Optional[Tuple[float, float]] = None,
+        left: tuple[float, float] | None = None,
+        right: tuple[float, float] | None = None,
     ) -> None:
         """Update the min/max calibration bounds."""
-
         if left is not None:
             self._calibration_left = left
         if right is not None:
@@ -65,7 +64,6 @@ class LineFollower:
 
     async def read(self) -> LineTelemetry:
         """Return the current normalized telemetry from both sensors."""
-
         raw_left = await self._left_reader()
         raw_right = await self._right_reader()
 
@@ -79,12 +77,12 @@ class LineFollower:
 
         return LineTelemetry(left=self._ema_left, right=self._ema_right, on_line=self._on_line)
 
-    def _apply_ema(self, previous: Optional[float], current: float) -> float:
+    def _apply_ema(self, previous: float | None, current: float) -> float:
         if previous is None:
             return current
         return self._ema_alpha * current + (1.0 - self._ema_alpha) * previous
 
-    def _normalize(self, value: float, bounds: Tuple[float, float]) -> float:
+    def _normalize(self, value: float, bounds: tuple[float, float]) -> float:
         low, high = bounds
         if high <= low:
             return 0.0
@@ -95,9 +93,15 @@ class LineFollower:
         assert self._ema_left is not None and self._ema_right is not None
 
         if not self._on_line:
-            if self._ema_left >= self._active_threshold or self._ema_right >= self._active_threshold:
+            if (
+                self._ema_left >= self._active_threshold
+                or self._ema_right >= self._active_threshold
+            ):
                 self._on_line = True
         else:
-            if self._ema_left < self._inactive_threshold and self._ema_right < self._inactive_threshold:
+            if (
+                self._ema_left < self._inactive_threshold
+                and self._ema_right < self._inactive_threshold
+            ):
                 self._on_line = False
 

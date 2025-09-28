@@ -9,6 +9,8 @@ from dataclasses import dataclass
 
 @dataclass
 class TokenBucketState:
+    """Configuration parameters for the token bucket."""
+
     rate_per_second: float
     capacity: int
 
@@ -51,7 +53,10 @@ class TokenBucket:
                     self._tokens -= 1.0
                     return
                 deficit = max(0.0, 1.0 - self._tokens)
-                wait_time = deficit / self._state.rate_per_second if self._state.rate_per_second > 0 else 0.1
+                if self._state.rate_per_second > 0:
+                    wait_time = deficit / self._state.rate_per_second
+                else:  # pragma: no cover - defensive guard
+                    wait_time = 0.1
             await asyncio.sleep(wait_time)
 
     def _refill(self) -> None:

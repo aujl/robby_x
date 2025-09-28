@@ -2,13 +2,11 @@ import asyncio
 from dataclasses import asdict
 
 import pytest
-
+from src.hardware.camjam.sensors.encoders import WheelEncoders
+from src.hardware.camjam.sensors.line_follow import LineFollower
+from src.hardware.camjam.sensors.ultrasonic import UltrasonicRanger
 
 pytestmark = pytest.mark.camjam_unit
-
-from src.hardware.camjam.sensors.ultrasonic import UltrasonicRanger, UltrasonicReading
-from src.hardware.camjam.sensors.line_follow import LineFollower, LineTelemetry
-from src.hardware.camjam.sensors.encoders import WheelEncoders, EncoderTelemetry
 
 
 class AsyncIteratorStub:
@@ -72,7 +70,9 @@ def test_line_follow_normalization_and_hysteresis():
 
         assert reading_2.on_line
         assert reading_3.on_line
-        assert not reading_4.on_line, "Hysteresis should release once both fall below inactive threshold"
+        assert not reading_4.on_line, (
+            "Hysteresis should release once both fall below inactive threshold"
+        )
 
         left_values = [reading_1.left, reading_2.left, reading_3.left, reading_4.left]
         assert left_values[1] > left_values[0], "EMA should respond to increasing reflectance"

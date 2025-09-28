@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 import math
-from typing import Dict
 
 import pytest
-
+from src.services.diagnostics.camjam import CamJamDiagnostics
 
 pytestmark = pytest.mark.camjam_unit
-
-from src.services.diagnostics.camjam import CamJamDiagnostics
 
 
 class TimeStub:
@@ -34,7 +31,6 @@ def diagnostics(time_stub: TimeStub) -> CamJamDiagnostics:
 
 def _strip_timestamps(events):
     """Replace volatile timestamps with sentinel for snapshot comparisons."""
-
     sanitized = []
     for event in events:
         event = dict(event)
@@ -93,7 +89,7 @@ def test_line_sensor_and_camera_status(diagnostics: CamJamDiagnostics, time_stub
     diagnostics.record_stream_status(status="live", detail="Operational")
 
     payload = diagnostics.ui_payload()
-    line_history: Dict[str, list] = payload["line_sensors"]
+    line_history: dict[str, list] = payload["line_sensors"]
     assert line_history["left"][0]["active"] is False
     assert line_history["left"][1]["active"] is True
     assert line_history["center"][0]["active"] is True
@@ -116,7 +112,9 @@ def test_line_sensor_and_camera_status(diagnostics: CamJamDiagnostics, time_stub
     assert sanitized[2]["component"] == "video_stream"
 
 
-def test_health_reports_stale_when_no_updates(diagnostics: CamJamDiagnostics, time_stub: TimeStub) -> None:
+def test_health_reports_stale_when_no_updates(
+    diagnostics: CamJamDiagnostics, time_stub: TimeStub
+) -> None:
     diagnostics.record_motor_command(left_speed=0.1, right_speed=0.1)
     diagnostics.record_stream_status(status="live")
 

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable, Set
 
 
 @dataclass
@@ -24,7 +24,7 @@ class RateLimitSettings:
 class ControlServiceConfig:
     """Runtime configuration for the API."""
 
-    api_keys: Set[str] = field(default_factory=set)
+    api_keys: set[str] = field(default_factory=set)
     allowed_networks: Iterable[str] = field(default_factory=lambda: ("127.0.0.0/8",))
     ingress_rate_limit: RateLimitSettings = field(
         default_factory=lambda: RateLimitSettings(rate_per_second=5.0, burst=5)
@@ -43,7 +43,6 @@ class ControlServiceConfig:
 
     def snapshot(self) -> dict[str, object]:
         """Return a serialisable copy of the configuration."""
-
         return {
             "ingress_rate_limit": {
                 "rate_per_second": self.ingress_rate_limit.rate_per_second,

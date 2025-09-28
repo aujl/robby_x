@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Deque, Dict, Iterable, List, Mapping, Optional
+from typing import Any
 
 try:  # pragma: no cover - exercised through fallback logger in tests
     import structlog  # type: ignore
@@ -24,7 +25,7 @@ class _FallbackLogger:
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def bind(self, **_: Any) -> "_FallbackLogger":  # pragma: no cover - trivial
+    def bind(self, **_: Any) -> _FallbackLogger:  # pragma: no cover - trivial
         return self
 
     def info(self, _event: str, **_: Any) -> None:  # pragma: no cover - noop logging
@@ -41,7 +42,7 @@ class DiagnosticsEvent:
     timestamp: float
     component: str
     event: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
 
 
 class CamJamDiagnostics:
@@ -54,30 +55,31 @@ class CamJamDiagnostics:
         stale_after_s: float = 5.0,
         time_source: Callable[[], float] | None = None,
     ) -> None:
+        """Initialise diagnostics buffers and capture configuration."""
         if history_size <= 0:
             raise ValueError("history_size must be positive")
         if stale_after_s <= 0:
             raise ValueError("stale_after_s must be positive")
 
-        self._history: Deque[DiagnosticsEvent] = deque(maxlen=history_size)
-        self._motor_history: Deque[Dict[str, Any]] = deque(maxlen=history_size)
-        self._ultrasonic_history: Dict[str, Deque[Dict[str, Any]]] = {}
-        self._line_history: Dict[str, Deque[Dict[str, Any]]] = {}
+        self._history: deque[DiagnosticsEvent] = deque(maxlen=history_size)
+        self._motor_history: deque[dict[str, Any]] = deque(maxlen=history_size)
+        self._ultrasonic_history: dict[str, deque[dict[str, Any]]] = {}
+        self._line_history: dict[str, deque[dict[str, Any]]] = {}
 
         self._pan_deg = 0.0
         self._tilt_deg = 0.0
-        self._pan_tilt_preset: Optional[str] = None
+        self._pan_tilt_preset: str | None = None
 
         self._stream_status: str = "idle"
-        self._stream_detail: Optional[str] = None
-        self._stream_src: Optional[str] = None
+        self._stream_detail: str | None = None
+        self._stream_src: str | None = None
 
-        self._last_motor_ts: Optional[float] = None
-        self._last_motor_payload: Optional[Dict[str, Any]] = None
-        self._last_ultrasonic_ts: Dict[str, float] = {}
-        self._last_line_ts: Dict[str, float] = {}
-        self._last_pan_tilt_ts: Optional[float] = None
-        self._last_stream_ts: Optional[float] = None
+        self._last_motor_ts: float | None = None
+        self._last_motor_payload: dict[str, Any] | None = None
+        self._last_ultrasonic_ts: dict[str, float] = {}
+        self._last_line_ts: dict[str, float] = {}
+        self._last_pan_tilt_ts: float | None = None
+        self._last_stream_ts: float | None = None
 
         self._time_source = time_source or __import__("time").time
         self._stale_after = float(stale_after_s)
@@ -91,10 +93,11 @@ class CamJamDiagnostics:
         *,
         left_speed: float,
         right_speed: float,
-        duration_s: Optional[float] = None,
-        queue_depth: Optional[int] = None,
+        duration_s: float | None = None,
+        queue_depth: int | None = None,
         source: str = "operator",
     ) -> None:
+        """Record a motor drive command and emit a diagnostics event."""
         timestamp = self._now()
         payload = {
             "left_speed": float(left_speed),
@@ -109,6 +112,7 @@ class CamJamDiagnostics:
         self._append_event("motors", "drive_command", payload, timestamp)
 
     def record_ultrasonic(self, sensor: str, *, distance_cm: float, valid: bool) -> None:
+        """Record an ultrasonic measurement for the named sensor."""
         timestamp = self._now()
         payload = {
             "sensor": sensor,
@@ -121,6 +125,7 @@ class CamJamDiagnostics:
         self._append_event("ultrasonic", "range_measurement", payload, timestamp)
 
     def record_line_event(self, sensor: str, *, active: bool) -> None:
+        """Record a line sensor activation state change."""
         timestamp = self._now()
         payload = {
             "sensor": sensor,
@@ -131,7 +136,14 @@ class CamJamDiagnostics:
         self._last_line_ts[sensor] = timestamp
         self._append_event("line", "sensor_state", payload, timestamp)
 
-    def record_pan_tilt(self, *, pan_deg: float, tilt_deg: float, preset: Optional[str] = None) -> None:
+    def record_pan_tilt(
+        self,
+        *,
+        pan_deg: float,
+        tilt_deg: float,
+        preset: str | None = None,
+    ) -> None:
+        """Record the most recent pan/tilt position and preset metadata."""
         timestamp = self._now()
         self._pan_deg = float(pan_deg)
         self._tilt_deg = float(tilt_deg)
@@ -148,9 +160,10 @@ class CamJamDiagnostics:
         self,
         *,
         status: str,
-        detail: Optional[str] = None,
-        src: Optional[str] = None,
+        detail: str | None = None,
+        src: str | None = None,
     ) -> None:
+        """Record the status of the video streaming pipeline."""
         timestamp = self._now()
         self._stream_status = status
         self._stream_detail = detail
@@ -166,10 +179,11 @@ class CamJamDiagnostics:
     # ------------------------------------------------------------------
     # Reporting helpers
     # ------------------------------------------------------------------
-    def health_report(self) -> Dict[str, Any]:
+    def health_report(self) -> dict[str, Any]:
+        """Summarise the health of each subsystem with stale detection."""
         now = self._now()
 
-        def component_status(last_ts: Optional[float]) -> str:
+        def component_status(last_ts: float | None) -> str:
             if last_ts is None:
                 return "unknown"
             if now - last_ts > self._stale_after:
@@ -224,7 +238,8 @@ class CamJamDiagnostics:
             "video_stream": video_status,
         }
 
-    def ui_payload(self, history: int = 10) -> Dict[str, Any]:
+    def ui_payload(self, history: int = 10) -> dict[str, Any]:
+        """Generate a structured payload for the diagnostics UI."""
         if history <= 0:
             raise ValueError("history must be positive")
 
@@ -267,21 +282,31 @@ class CamJamDiagnostics:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
-    def _append_event(self, component: str, event: str, payload: Mapping[str, Any], timestamp: Optional[float] = None) -> None:
+    def _append_event(
+        self,
+        component: str,
+        event: str,
+        payload: Mapping[str, Any],
+        timestamp: float | None = None,
+    ) -> None:
         ts = timestamp if timestamp is not None else self._now()
         entry = DiagnosticsEvent(timestamp=ts, component=component, event=event, data=dict(payload))
         self._history.append(entry)
         self._logger.bind(component=component).info(event, timestamp=ts, **dict(payload))
 
-    def _serialize_history(self, history: Deque[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]:
+    def _serialize_history(
+        self,
+        history: deque[dict[str, Any]],
+        limit: int,
+    ) -> list[dict[str, Any]]:
         samples = list(history)[-limit:]
         samples.reverse()
-        result: List[Dict[str, Any]] = []
+        result: list[dict[str, Any]] = []
         for sample in samples:
             result.append(dict(sample))
         return result
 
-    def _tail(self, history: Deque[DiagnosticsEvent], limit: int) -> Iterable[DiagnosticsEvent]:
+    def _tail(self, history: deque[DiagnosticsEvent], limit: int) -> Iterable[DiagnosticsEvent]:
         return list(history)[-limit:]
 
     def _now(self) -> float:

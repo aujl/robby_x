@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ipaddress
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from .command_queue import CommandQueue, CommandQueueFullError, DriveCommand
 from .config import ControlServiceConfig, RateLimitSettings
@@ -16,7 +16,7 @@ class Response:
     """Lightweight HTTP-style response."""
 
     status_code: int
-    body: Dict[str, Any]
+    body: dict[str, Any]
 
 
 class ControlServiceApp:
@@ -50,7 +50,7 @@ class ControlServiceApp:
             maxsize=config.queue_maxsize,
         )
         self._allowed_networks = [ipaddress.ip_network(net) for net in config.allowed_networks]
-        self._routes: Dict[Tuple[str, str], Any] = {
+        self._routes: dict[tuple[str, str], Any] = {
             ("POST", "/drive/differential"): self._handle_drive,
             ("POST", "/drive/stop"): self._handle_stop,
             ("POST", "/drive/brake"): self._handle_brake,
@@ -77,8 +77,8 @@ class ControlServiceApp:
         method: str,
         path: str,
         *,
-        json: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        json: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> Response:
         headers = headers or {}
         auth_error = self._authenticate(headers)
@@ -95,7 +95,7 @@ class ControlServiceApp:
             return Response(status_code=422, body={"detail": str(exc)})
         return result
 
-    def _authenticate(self, headers: Dict[str, str]) -> Optional[Response]:
+    def _authenticate(self, headers: dict[str, str]) -> Response | None:
         api_key = headers.get("X-Api-Key")
         if api_key not in self.config.api_keys:
             return Response(status_code=401, body={"detail": "Invalid API key"})
@@ -110,7 +110,7 @@ class ControlServiceApp:
             return Response(status_code=403, body={"detail": "Client network not permitted"})
         return None
 
-    async def _handle_drive(self, payload: Dict[str, Any]) -> Response:
+    async def _handle_drive(self, payload: dict[str, Any]) -> Response:
         left = self._validate_speed(payload.get("left_speed"), "left_speed")
         right = self._validate_speed(payload.get("right_speed"), "right_speed")
         duration = payload.get("duration_s")
@@ -131,26 +131,26 @@ class ControlServiceApp:
             return Response(status_code=503, body={"detail": str(exc)})
         return Response(status_code=202, body={"status": "queued", "queue_depth": depth})
 
-    async def _handle_stop(self, payload: Dict[str, Any]) -> Response:
+    async def _handle_stop(self, payload: dict[str, Any]) -> Response:
         self.motor_controller.stop()
         await self.command_queue.clear()
         return Response(status_code=200, body={"status": "stopped"})
 
-    async def _handle_brake(self, payload: Dict[str, Any]) -> Response:
+    async def _handle_brake(self, payload: dict[str, Any]) -> Response:
         self.motor_controller.brake()
         await self.command_queue.clear()
         return Response(status_code=200, body={"status": "braking"})
 
-    async def _handle_estop(self, payload: Dict[str, Any]) -> Response:
+    async def _handle_estop(self, payload: dict[str, Any]) -> Response:
         await self.command_queue.clear()
         self.motor_controller.emergency_stop()
         return Response(status_code=200, body={"status": "estop"})
 
-    async def _handle_reset(self, payload: Dict[str, Any]) -> Response:
+    async def _handle_reset(self, payload: dict[str, Any]) -> Response:
         self.motor_controller.reset_estop()
         return Response(status_code=200, body={"status": "ready"})
 
-    async def _handle_pan_tilt(self, payload: Dict[str, Any]) -> Response:
+    async def _handle_pan_tilt(self, payload: dict[str, Any]) -> Response:
         pan = payload.get("pan_deg")
         tilt = payload.get("tilt_deg")
         if not isinstance(pan, (int, float)) or not -90.0 <= float(pan) <= 90.0:
@@ -160,10 +160,13 @@ class ControlServiceApp:
         self.servo_controller.move_to(float(pan), float(tilt))
         return Response(
             status_code=200,
-            body={"pan_deg": float(self.servo_controller.pan), "tilt_deg": float(self.servo_controller.tilt)},
+            body={
+                "pan_deg": float(self.servo_controller.pan),
+                "tilt_deg": float(self.servo_controller.tilt),
+            },
         )
 
-    async def _handle_ultrasonic(self, payload: Dict[str, Any]) -> Response:
+    async def _handle_ultrasonic(self, payload: dict[str, Any]) -> Response:
         reading = await self.ultrasonic_ranger.read()
         history = []
         for sample in getattr(self.ultrasonic_ranger, "history", []):
@@ -177,7 +180,7 @@ class ControlServiceApp:
             },
         )
 
-    async def _handle_line(self, payload: Dict[str, Any]) -> Response:
+    async def _handle_line(self, payload: dict[str, Any]) -> Response:
         telemetry = await self.line_follower.read()
         return Response(
             status_code=200,
@@ -188,10 +191,10 @@ class ControlServiceApp:
             },
         )
 
-    async def _handle_get_config(self, payload: Dict[str, Any]) -> Response:
+    async def _handle_get_config(self, payload: dict[str, Any]) -> Response:
         return Response(status_code=200, body=self.config.snapshot())
 
-    async def _handle_patch_config(self, payload: Dict[str, Any]) -> Response:
+    async def _handle_patch_config(self, payload: dict[str, Any]) -> Response:
         ingress = payload.get("ingress_rate_limit")
         if ingress is not None:
             self.config.ingress_rate_limit = RateLimitSettings(
@@ -233,7 +236,7 @@ class ControlServiceApp:
 
 def create_app(
     *,
-    config: Optional[ControlServiceConfig] = None,
+    config: ControlServiceConfig | None = None,
     motor_controller: Any = None,
     servo_controller: Any = None,
     ultrasonic_ranger: Any = None,
@@ -241,7 +244,12 @@ def create_app(
 ) -> ControlServiceApp:
     if config is None:
         config = ControlServiceConfig(api_keys={"local"})
-    if motor_controller is None or servo_controller is None or ultrasonic_ranger is None or line_follower is None:
+    if (
+        motor_controller is None
+        or servo_controller is None
+        or ultrasonic_ranger is None
+        or line_follower is None
+    ):
         raise RuntimeError("All hardware adapters must be provided explicitly in this environment")
     return ControlServiceApp(
         config=config,
@@ -252,4 +260,10 @@ def create_app(
     )
 
 
-__all__ = ["create_app", "ControlServiceApp", "Response", "ControlServiceConfig", "RateLimitSettings"]
+__all__ = [
+    "create_app",
+    "ControlServiceApp",
+    "Response",
+    "ControlServiceConfig",
+    "RateLimitSettings",
+]

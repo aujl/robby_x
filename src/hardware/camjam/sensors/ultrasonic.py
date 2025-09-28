@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from statistics import median
-from typing import Awaitable, Callable, Deque, List, Optional
-
 
 EchoTimeReader = Callable[[], Awaitable[float]]
 
@@ -39,26 +38,28 @@ class UltrasonicRanger:
         self._offset = 0.0
         self._median_window = median_window
         self._max_deviation = max_deviation
-        self._raw_samples: Deque[float] = deque(maxlen=median_window)
-        self._history: Deque[UltrasonicReading] = deque(maxlen=history_size)
+        self._raw_samples: deque[float] = deque(maxlen=median_window)
+        self._history: deque[UltrasonicReading] = deque(maxlen=history_size)
 
-    def calibrate(self, *, speed_of_sound: Optional[float] = None, offset: Optional[float] = None) -> None:
+    def calibrate(
+        self,
+        *,
+        speed_of_sound: float | None = None,
+        offset: float | None = None,
+    ) -> None:
         """Adjust the conversion coefficients used for distance estimation."""
-
         if speed_of_sound is not None:
             self._speed_of_sound = speed_of_sound
         if offset is not None:
             self._offset = offset
 
     @property
-    def history(self) -> List[UltrasonicReading]:
+    def history(self) -> list[UltrasonicReading]:
         """Return the list of recent valid readings."""
-
         return list(self._history)
 
     async def read(self) -> UltrasonicReading:
         """Trigger a measurement and return the filtered distance."""
-
         echo_duration = await self._echo_time_reader()
         raw_distance = self._offset + (echo_duration * self._speed_of_sound) / 2.0
 
@@ -72,7 +73,6 @@ class UltrasonicRanger:
 
     def _is_within_deviation(self, raw_distance: float) -> bool:
         """Check whether the new reading should be considered valid."""
-
         if len(self._raw_samples) < self._median_window:
             return True
 

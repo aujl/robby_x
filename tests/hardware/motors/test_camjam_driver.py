@@ -2,11 +2,9 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-
+from src.hardware.camjam.motor_controller import CamJamMotorController
 
 pytestmark = pytest.mark.camjam_mocked_hw
-
-from src.hardware.camjam.motor_controller import CamJamMotorController
 
 
 @pytest.fixture
@@ -61,8 +59,13 @@ def test_drive_translates_pwm_and_direction(camjam_config, pigpio_stub):
     controller.drive(0.5, -0.75)
 
     # 0.5 + 0.1 trim = 0.6, which the curve maps to 0.56
-    pi.set_PWM_dutycycle.assert_any_call(camjam_config["motors"]["left"]["pwm_pin"], duty_for(0.56))
-    pi.set_PWM_dutycycle.assert_any_call(camjam_config["motors"]["right"]["pwm_pin"], duty_for(0.75 - camjam_config["motors"]["right"]["trim"]))
+    pi.set_PWM_dutycycle.assert_any_call(
+        camjam_config["motors"]["left"]["pwm_pin"], duty_for(0.56)
+    )
+    pi.set_PWM_dutycycle.assert_any_call(
+        camjam_config["motors"]["right"]["pwm_pin"],
+        duty_for(0.75 - camjam_config["motors"]["right"]["trim"]),
+    )
 
     pi.write.assert_any_call(camjam_config["motors"]["left"]["forward_pin"], 1)
     pi.write.assert_any_call(camjam_config["motors"]["left"]["reverse_pin"], 0)
@@ -101,8 +104,12 @@ def test_trim_offsets_are_applied_before_curve(camjam_config, pigpio_stub):
     left_expected = duty_for(0.45)  # 0.4 + 0.1 trim then curve reduces to 0.45
     right_expected = duty_for(0.35)  # 0.4 - 0.05 trim
 
-    pi.set_PWM_dutycycle.assert_any_call(camjam_config["motors"]["left"]["pwm_pin"], left_expected)
-    pi.set_PWM_dutycycle.assert_any_call(camjam_config["motors"]["right"]["pwm_pin"], right_expected)
+    pi.set_PWM_dutycycle.assert_any_call(
+        camjam_config["motors"]["left"]["pwm_pin"], left_expected
+    )
+    pi.set_PWM_dutycycle.assert_any_call(
+        camjam_config["motors"]["right"]["pwm_pin"], right_expected
+    )
 
 
 def test_emergency_stop_cuts_power_and_blocks_new_commands(camjam_config, pigpio_stub):
