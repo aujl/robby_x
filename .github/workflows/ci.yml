@@ -96,4 +96,3 @@ jobs:
         with:
           name: frontend-coverage
           path: frontend/coverage
-

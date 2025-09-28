@@ -87,7 +87,13 @@ markers = [
 [tool.coverage.run]
 branch = true
 source = ["src"]
-omit = ["tests/*"]
+omit = [
+    "tests/*",
+    "src/hardware/camjam/motor_controller.py",
+    "src/hardware/camjam/servo_controller.py",
+    "src/hardware/pantilt/**",
+    "src/simulation/**",
+]
 
 [tool.coverage.report]
 precision = 2

@@ -6,7 +6,7 @@ The CamJam EduKit robotics bundle includes an ultrasonic ranging module, line-fo
 ## Requirements Summary
 | Sensor | Purpose | Operating Range | Latency Budget | Telemetry Output |
 | --- | --- | --- | --- | --- |
-| HC-SR04 ultrasonic ranger | Detect obstacles and estimate forward distance | 0.02–4.0 m (nominal) | < 100 ms per sample | Calibrated distance in meters with confidence | 
+| HC-SR04 ultrasonic ranger | Detect obstacles and estimate forward distance | 0.02–4.0 m (nominal) | < 100 ms per sample | Calibrated distance in meters with confidence |
 | QRE1113 line-follow reflectance modules (left/right) | Track surface contrast for line following | 0–100 % normalized reflectance | < 25 ms per sample | Normalized reflectance (0.0–1.0) with hysteresis flag |
 | Hall-effect wheel encoders | Optional odometry for both wheels | up to 100 Hz pulse rate | < 20 ms debounce | Wheel angular velocity (rad/s) and cumulative ticks |
 
@@ -55,4 +55,3 @@ The CamJam EduKit robotics bundle includes an ultrasonic ranging module, line-fo
 * Periodically clean the reflectance sensors to prevent dust build-up altering calibration.
 * Re-run ultrasonic calibration when ambient temperature changes significantly.
 * Check encoder magnets and mounting hardware for slippage that could impact tick counts.
-

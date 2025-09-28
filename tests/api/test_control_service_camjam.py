@@ -11,6 +11,7 @@ from src.api.control_service import (
     RateLimitSettings,
     create_app,
 )
+from src.api.control_service.command_queue import CommandQueueFullError
 
 
 pytestmark = pytest.mark.camjam_unit
@@ -236,3 +237,125 @@ def test_line_schema(control_app) -> None:
     )
     assert response.status_code == 200
     assert response.body == {"left": 0.7, "right": 0.3, "on_line": True}
+
+
+def test_invalid_api_key_rejected(control_app) -> None:
+    app, _, loop = control_app
+    response = loop.run_until_complete(
+        app.handle_request(
+            "POST",
+            "/drive/stop",
+            headers={"X-Api-Key": "wrong-key"},
+        )
+    )
+    assert response.status_code == 401
+
+
+def test_invalid_forwarded_ip_returns_400(control_app) -> None:
+    app, _, loop = control_app
+    response = loop.run_until_complete(
+        app.handle_request(
+            "POST",
+            "/drive/stop",
+            headers={
+                "X-Api-Key": "test-key",
+                "X-Forwarded-For": "not-an-ip",
+            },
+        )
+    )
+    assert response.status_code == 400
+
+
+def test_unknown_route_returns_404(control_app) -> None:
+    app, _, loop = control_app
+    response = loop.run_until_complete(
+        app.handle_request(
+            "GET",
+            "/does-not-exist",
+            headers={"X-Api-Key": "test-key"},
+        )
+    )
+    assert response.status_code == 404
+
+
+def test_drive_queue_full_returns_503(control_app, monkeypatch: pytest.MonkeyPatch) -> None:
+    app, _, loop = control_app
+
+    async def fail_enqueue(*_args, **_kwargs):
+        raise CommandQueueFullError("Drive command queue is full")
+
+    monkeypatch.setattr(app.command_queue, "enqueue_drive", fail_enqueue)
+
+    response = loop.run_until_complete(
+        app.handle_request(
+            "POST",
+            "/drive/differential",
+            json={"left_speed": 0.1, "right_speed": 0.1},
+            headers={"X-Api-Key": "test-key"},
+        )
+    )
+    assert response.status_code == 503
+
+
+def test_drive_duration_validation(control_app) -> None:
+    app, _, loop = control_app
+    response = loop.run_until_complete(
+        app.handle_request(
+            "POST",
+            "/drive/differential",
+            json={"left_speed": 0.1, "right_speed": 0.1, "duration_s": 0},
+            headers={"X-Api-Key": "test-key"},
+        )
+    )
+    assert response.status_code == 422
+
+
+def test_pan_tilt_returns_updated_position(control_app) -> None:
+    app, context, loop = control_app
+    response = loop.run_until_complete(
+        app.handle_request(
+            "POST",
+            "/pan-tilt/position",
+            json={"pan_deg": 10.0, "tilt_deg": -5.0},
+            headers={"X-Api-Key": "test-key"},
+        )
+    )
+    assert response.status_code == 200
+    assert response.body == {"pan_deg": 10.0, "tilt_deg": -5.0}
+    assert context["servos"].pan == 10.0
+    assert context["servos"].tilt == -5.0
+
+
+def test_patch_config_updates_limits(control_app) -> None:
+    app, _, loop = control_app
+    payload = {
+        "ingress_rate_limit": {"rate_per_second": 3.0, "burst": 4},
+        "execution_rate_limit": {"rate_per_second": 6.0, "burst": 7},
+        "queue_maxsize": 9,
+    }
+    response = loop.run_until_complete(
+        app.handle_request(
+            "PATCH",
+            "/config",
+            json=payload,
+            headers={"X-Api-Key": "test-key"},
+        )
+    )
+    assert response.status_code == 200
+    snapshot = response.body
+    assert snapshot["ingress_rate_limit"]["rate_per_second"] == pytest.approx(3.0)
+    assert snapshot["execution_rate_limit"]["burst"] == 7
+    assert snapshot["queue_maxsize"] == 9
+
+
+def test_patch_config_validates_queue_size(control_app) -> None:
+    app, _, loop = control_app
+    response = loop.run_until_complete(
+        app.handle_request(
+            "PATCH",
+            "/config",
+            json={"queue_maxsize": -1},
+            headers={"X-Api-Key": "test-key"},
+        )
+    )
+    assert response.status_code == 422

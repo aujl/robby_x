@@ -80,8 +80,7 @@ def test_systemd_units_have_expected_configuration(
 
 def _write_fake_systemctl(tmp_path: Path, inactive_service: str | None) -> Path:
     script_path = tmp_path / "systemctl"
-    script_path.write_text(
-        """#!/usr/bin/env bash
+    script_contents = """#!/usr/bin/env bash
 set -euo pipefail
 
 if [[ "$1" == "is-active" ]]; then
@@ -114,9 +113,9 @@ if [[ "$1" == "start" ]]; then
 fi
 
 exit 0
-""".replace(
-            "{inactive_service}", inactive_service or ""
-        ),
+"""
+    script_path.write_text(
+        script_contents.replace("{inactive_service}", inactive_service or ""),
         encoding="utf-8",
     )
     script_path.chmod(stat.S_IRWXU)
