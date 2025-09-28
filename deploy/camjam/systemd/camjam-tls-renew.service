@@ -1,0 +1,7 @@
+[Unit]
+Description=Renew CamJam TLS Certificates
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/opt/camjam/bin/tls_renew.sh
