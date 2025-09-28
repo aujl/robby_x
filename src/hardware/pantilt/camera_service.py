@@ -17,8 +17,7 @@ class ServoCommand:
 
 
 class ServoControllerProtocol(Protocol):  # pragma: no cover - structural typing aid
-    def move_to(self, pan: float, tilt: float) -> None:
-        ...
+    def move_to(self, pan: float, tilt: float) -> None: ...
 
 
 class StreamError(RuntimeError):

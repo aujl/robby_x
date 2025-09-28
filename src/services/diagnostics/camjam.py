@@ -257,10 +257,7 @@ class CamJamDiagnostics:
             for sensor, samples in self._line_history.items()
         }
 
-        events = [
-            asdict(event)
-            for event in self._tail(self._history, history)
-        ]
+        events = [asdict(event) for event in self._tail(self._history, history)]
 
         pan_tilt = {
             **health["pan_tilt"],

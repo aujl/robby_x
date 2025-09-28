@@ -82,4 +82,3 @@ class UltrasonicRanger:
 
         deviation = abs(raw_distance - window_median) / window_median
         return deviation <= self._max_deviation
-

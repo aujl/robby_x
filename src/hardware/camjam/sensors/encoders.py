@@ -118,4 +118,3 @@ class WheelEncoders:
     def _ticks_to_angular_velocity(self, delta_ticks: int, delta_t: float) -> float:
         revolutions = delta_ticks / self._ticks_per_revolution
         return revolutions * 2.0 * math.pi / delta_t
-

@@ -252,5 +252,3 @@ def get_simulation_context() -> CamJamSimulation:
 def reset_simulation_context() -> None:
     global _SIMULATION_CONTEXT
     _SIMULATION_CONTEXT = None
-
-

@@ -259,4 +259,3 @@ def _build_scenarios() -> dict[str, CamJamScenario]:
 
 
 SCENARIOS: dict[str, CamJamScenario] = _build_scenarios()
-

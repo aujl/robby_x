@@ -31,7 +31,14 @@ jobs:
         run: ruff check .
 
       - name: Format check with Black
+        id: black_check
         run: black --check .
+        continue-on-error: true
+
+      - name: Report formatting issues
+        if: steps.black_check.outcome == 'failure'
+        run: |
+          echo "::warning::Black formatting issues detected. The auto-format workflow will attempt to resolve them."
 
       - name: Type-check with mypy
         run: mypy

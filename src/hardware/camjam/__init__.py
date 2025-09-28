@@ -67,4 +67,3 @@ def get_pan_tilt_servos(**kwargs: Any) -> CamJamPanTiltServos:
     if _simulation_enabled():
         return _simulation_context().create_pan_tilt_servos(**kwargs)
     return CamJamPanTiltServos(**kwargs)
-
