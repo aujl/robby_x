@@ -1,0 +1,23 @@
+# CamJam EduKit 3 drivetrain configuration template
+# Copy this file and adjust the BCM pin numbers to match your wiring.
+
+pwm_frequency: 1000  # Hz
+
+motors:
+  left:
+    pwm_pin: 18
+    forward_pin: 4
+    reverse_pin: 17
+    trim: 0.0
+    speed_curve:
+      - [0.0, 0.0]
+      - [1.0, 1.0]
+
+  right:
+    pwm_pin: 19
+    forward_pin: 27
+    reverse_pin: 22
+    trim: 0.0
+    speed_curve:
+      - [0.0, 0.0]
+      - [1.0, 1.0]
