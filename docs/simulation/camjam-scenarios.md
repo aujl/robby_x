@@ -83,4 +83,3 @@ starboard and back, sampling different ranges at each pose.
 | 0.2       | 0          | 0           | 2.4       | 0.0     | 0.0      | (0.0, 0.0)    |
 | 0.3       | 0          | 0           | 2.1       | 22.5    | 5.0      | (0.0, 0.0)    |
 | 0.4       | 0          | 0           | 2.0       | 45.0    | 10.0     | (0.0, 0.0)    |
-

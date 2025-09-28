@@ -40,5 +40,3 @@ jobs:
           commit_message: "chore: apply black formatting"
           branch: ${{ github.head_ref }}
           commit_options: '--no-verify'
-
-

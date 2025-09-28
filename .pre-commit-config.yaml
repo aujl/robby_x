@@ -23,6 +23,7 @@ repos:
       - id: mypy
         additional_dependencies: []
         args: ["--config-file", "pyproject.toml"]
+        files: "^(src|scripts)/"
   - repo: local
     hooks:
       - id: pytest

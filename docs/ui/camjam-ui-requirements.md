@@ -40,4 +40,3 @@ The CamJam rover frontend must provide responsive, accessible controls and telem
 
 ## Instrumentation
 - Emit analytics events for command interactions, telemetry anomalies, and layout breakpoint changes to support quantitative monitoring.
-
