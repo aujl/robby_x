@@ -8,7 +8,14 @@ const defaultDiagnostics = {
   motors: { status: 'unknown', lastEventAt: null, lastCommand: null, history: [] },
   ultrasonic: {},
   line_sensors: {},
-  pan_tilt: { status: 'unknown', pan_deg: 0, tilt_deg: 0, preset: null, updatedAt: null, stale: true },
+  pan_tilt: {
+    status: 'unknown',
+    pan_deg: 0,
+    tilt_deg: 0,
+    preset: null,
+    updatedAt: null,
+    stale: true,
+  },
   video_stream: { status: 'idle', detail: null, src: null, stale: true, lastEventAt: null },
   events: [],
 };
@@ -36,7 +43,7 @@ describe('PanTiltControl accessibility', () => {
     render(
       <ControlContext.Provider value={contextValue}>
         <PanTiltControl />
-      </ControlContext.Provider>
+      </ControlContext.Provider>,
     );
 
     const panSlider = screen.getByRole('slider', { name: /pan angle/i });
@@ -45,19 +52,26 @@ describe('PanTiltControl accessibility', () => {
     await user.tab();
     await user.keyboard('{ArrowRight}');
 
-    await waitFor(() => expect(contextValue.sendPanTiltCommand).toHaveBeenLastCalledWith({ panDeg: 1, tiltDeg: 0 }));
+    await waitFor(() =>
+      expect(contextValue.sendPanTiltCommand).toHaveBeenLastCalledWith({ panDeg: 1, tiltDeg: 0 }),
+    );
   });
 
   it('surfaces stream state for assistive tech', () => {
     const value: ControlContextValue = {
       ...contextValue,
-      video: { status: 'fallback', src: 'http://still', fallbackSrc: 'http://still', lastError: 'Stream unavailable' },
+      video: {
+        status: 'fallback',
+        src: 'http://still',
+        fallbackSrc: 'http://still',
+        lastError: 'Stream unavailable',
+      },
     };
 
     render(
       <ControlContext.Provider value={value}>
         <PanTiltControl />
-      </ControlContext.Provider>
+      </ControlContext.Provider>,
     );
 
     const stream = screen.getByTestId('pantilt-stream');

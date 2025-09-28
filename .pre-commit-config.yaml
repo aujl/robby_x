@@ -17,6 +17,11 @@ repos:
       - id: ruff
         args: ["--fix"]
       - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0
+    hooks:
+      - id: prettier
+        files: ^frontend/(src|tests)/.*\.(ts|tsx|css)$
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.10.0
     hooks:
@@ -26,6 +31,14 @@ repos:
         files: "^(src|scripts)/"
   - repo: local
     hooks:
+      - id: frontend-lint
+        name: frontend eslint
+        entry: npm
+        language: system
+        args: ["--prefix", "frontend", "run", "lint"]
+        pass_filenames: false
+        types_or: [ts, tsx]
+        files: ^frontend/(src|tests)/
       - id: pytest
         name: pytest
         entry: pytest

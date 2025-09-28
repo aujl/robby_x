@@ -9,7 +9,7 @@ RasPi robot control stack for the CamJam buggy, PanTilt camera rig, and telemetr
 ## Development quickstart
 
 1. Install tooling: `pip install -e .[dev,sim]` and `npm install --prefix frontend`.
-2. Install git hooks: `pre-commit install` to run CamJam-specific linting, typing, and simulator smoke tests before each commit.
+2. Install git hooks: `pre-commit install` to run CamJam-specific linting, typing, simulator smoke tests, and frontend formatting/linting before each commit.
 3. Run the focused test suites:
    - `pytest -m "camjam_unit or camjam_mocked_hw"`
    - `pytest -m camjam_simulation`

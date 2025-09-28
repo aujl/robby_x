@@ -7,7 +7,14 @@ const defaultDiagnostics = {
   motors: { status: 'unknown', lastEventAt: null, lastCommand: null, history: [] },
   ultrasonic: {},
   line_sensors: {},
-  pan_tilt: { status: 'unknown', pan_deg: 0, tilt_deg: 0, preset: null, updatedAt: null, stale: true },
+  pan_tilt: {
+    status: 'unknown',
+    pan_deg: 0,
+    tilt_deg: 0,
+    preset: null,
+    updatedAt: null,
+    stale: true,
+  },
   video_stream: { status: 'idle', detail: null, src: null, stale: true, lastEventAt: null },
   events: [],
 };
@@ -32,40 +39,46 @@ const contextValue: ControlContextValue = {
 describe('App responsiveness', () => {
   it('updates layout data attribute based on breakpoint', () => {
     const matchMediaMock = vi.spyOn(window, 'matchMedia');
-    matchMediaMock.mockImplementation((query: string) => ({
-      matches: query.includes('min-width: 1024px'),
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => false,
-    } as MediaQueryList));
+    matchMediaMock.mockImplementation(
+      (query: string) =>
+        ({
+          matches: query.includes('min-width: 1024px'),
+          media: query,
+          onchange: null,
+          addListener: () => {},
+          removeListener: () => {},
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          dispatchEvent: () => false,
+        }) as MediaQueryList,
+    );
 
     render(
       <ControlContext.Provider value={contextValue}>
         <App />
-      </ControlContext.Provider>
+      </ControlContext.Provider>,
     );
 
     expect(screen.getByTestId('layout-root')).toHaveAttribute('data-layout', 'desktop');
 
-    matchMediaMock.mockImplementation((query: string) => ({
-      matches: query.includes('min-width: 768px') && !query.includes('min-width: 1024px'),
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => false,
-    } as MediaQueryList));
+    matchMediaMock.mockImplementation(
+      (query: string) =>
+        ({
+          matches: query.includes('min-width: 768px') && !query.includes('min-width: 1024px'),
+          media: query,
+          onchange: null,
+          addListener: () => {},
+          removeListener: () => {},
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          dispatchEvent: () => false,
+        }) as MediaQueryList,
+    );
 
     render(
       <ControlContext.Provider value={contextValue}>
         <App />
-      </ControlContext.Provider>
+      </ControlContext.Provider>,
     );
 
     expect(screen.getAllByTestId('layout-root')[1]).toHaveAttribute('data-layout', 'tablet');

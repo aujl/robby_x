@@ -32,8 +32,20 @@ beforeEach(() => {
           source: 'test-suite',
         },
         history: [
-          { left_speed: 0.55, right_speed: 0.52, duration_s: 1, queue_depth: 2, source: 'test-suite' },
-          { left_speed: 0.3, right_speed: 0.28, duration_s: null, queue_depth: 1, source: 'operator' },
+          {
+            left_speed: 0.55,
+            right_speed: 0.52,
+            duration_s: 1,
+            queue_depth: 2,
+            source: 'test-suite',
+          },
+          {
+            left_speed: 0.3,
+            right_speed: 0.28,
+            duration_s: null,
+            queue_depth: 1,
+            source: 'operator',
+          },
         ],
       },
       ultrasonic: {
@@ -43,10 +55,7 @@ beforeEach(() => {
         ],
       },
       line_sensors: {
-        left: [
-          { active: false },
-          { active: true },
-        ],
+        left: [{ active: false }, { active: true }],
       },
       pan_tilt: {
         status: 'ok',
@@ -97,9 +106,18 @@ beforeEach(() => {
 describe('TelemetryPanel', () => {
   it('renders ultrasonic thresholds with appropriate classes', () => {
     renderTelemetry(<TelemetryPanel />);
-    expect(screen.getByText(/front/).closest('div')).toHaveAttribute('data-level', 'safe');
-    expect(screen.getByText(/rear/).closest('div')).toHaveAttribute('data-level', 'danger');
-    expect(screen.getByText(/right/).closest('div')).toHaveAttribute('data-level', 'caution');
+    expect(screen.getByRole('group', { name: /front distance 55 centimeters/i })).toHaveAttribute(
+      'data-level',
+      'safe',
+    );
+    expect(screen.getByRole('group', { name: /rear distance 10 centimeters/i })).toHaveAttribute(
+      'data-level',
+      'danger',
+    );
+    expect(screen.getByRole('group', { name: /right distance 35 centimeters/i })).toHaveAttribute(
+      'data-level',
+      'caution',
+    );
   });
 
   it('marks telemetry stale when no updates arrive within 2 seconds', () => {
@@ -120,7 +138,7 @@ describe('TelemetryPanel', () => {
     rerender(
       <ControlContext.Provider value={contextValue}>
         <TelemetryPanel />
-      </ControlContext.Provider>
+      </ControlContext.Provider>,
     );
 
     expect(screen.getByText(/telemetry stale/i)).toBeInTheDocument();

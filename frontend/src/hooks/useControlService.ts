@@ -25,7 +25,14 @@ const DEFAULT_DIAGNOSTICS: DiagnosticsState = {
   motors: { status: 'unknown', lastEventAt: null, lastCommand: null, history: [] },
   ultrasonic: {},
   line_sensors: {},
-  pan_tilt: { status: 'unknown', pan_deg: 0, tilt_deg: 0, preset: null, updatedAt: null, stale: true },
+  pan_tilt: {
+    status: 'unknown',
+    pan_deg: 0,
+    tilt_deg: 0,
+    preset: null,
+    updatedAt: null,
+    stale: true,
+  },
   video_stream: { status: 'idle', detail: null, src: null, stale: true, lastEventAt: null },
   events: [],
 };
@@ -37,12 +44,9 @@ export function useControlService(): ControlContextValue {
   const [diagnostics] = useState<DiagnosticsState>(DEFAULT_DIAGNOSTICS);
   const streamUrl = useMemo(
     () => import.meta.env.VITE_VIDEO_STREAM_URL ?? 'http://localhost:8081/stream.mjpg',
-    []
+    [],
   );
-  const fallbackUrl = useMemo(
-    () => import.meta.env.VITE_VIDEO_FALLBACK_URL ?? null,
-    []
-  );
+  const fallbackUrl = useMemo(() => import.meta.env.VITE_VIDEO_FALLBACK_URL ?? null, []);
   const [video, setVideo] = useState<VideoStreamState>({
     status: 'idle',
     src: null,
@@ -80,7 +84,11 @@ export function useControlService(): ControlContextValue {
     }
     probeRef.current = probe;
 
-    const finalize = (status: VideoStreamState['status'], src: string | null, error: string | null) => {
+    const finalize = (
+      status: VideoStreamState['status'],
+      src: string | null,
+      error: string | null,
+    ) => {
       if (probeRef.current !== probe) {
         return;
       }
@@ -92,7 +100,8 @@ export function useControlService(): ControlContextValue {
 
     const cacheBust = `${streamUrl}${streamUrl.includes('?') ? '&' : '?'}cacheBust=${Date.now()}`;
     probe.onload = () => finalize('live', streamUrl, null);
-    probe.onerror = () => finalize(fallbackUrl ? 'fallback' : 'error', fallbackUrl, 'Stream unavailable');
+    probe.onerror = () =>
+      finalize(fallbackUrl ? 'fallback' : 'error', fallbackUrl, 'Stream unavailable');
     probe.src = cacheBust;
   }, [fallbackUrl, streamUrl]);
 
