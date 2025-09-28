@@ -2,6 +2,9 @@ import asyncio
 
 import pytest
 
+
+pytestmark = pytest.mark.camjam_simulation
+
 from src.simulation.camjam import (
     list_scenarios,
     load_scenario,

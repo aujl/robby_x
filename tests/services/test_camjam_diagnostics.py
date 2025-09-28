@@ -5,6 +5,9 @@ from typing import Dict
 
 import pytest
 
+
+pytestmark = pytest.mark.camjam_unit
+
 from src.services.diagnostics.camjam import CamJamDiagnostics
 
 

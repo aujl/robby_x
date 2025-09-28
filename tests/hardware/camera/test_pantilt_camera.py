@@ -9,6 +9,9 @@ from unittest.mock import MagicMock, call
 import pytest
 
 
+pytestmark = pytest.mark.camjam_mocked_hw
+
+
 @pytest.fixture(autouse=True)
 def picamera2_stubs(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
     class DummyEncoder:

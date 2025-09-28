@@ -1,0 +1,110 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robby-x"
+version = "0.1.0"
+description = "CamJam buggy control stack"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Robby X Team", email = "robotics@example.com" },
+]
+keywords = ["robotics", "camjam", "raspberry-pi", "control"]
+dependencies = [
+    "structlog>=24.1",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = {find = {where = ["src"]}}
+include-package-data = true
+
+
+[project.optional-dependencies]
+dev = [
+    "black==24.4.2",
+    "mypy==1.10.0",
+    "pytest>=7.4",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=4.1",
+    "ruff==0.4.5",
+    "types-requests",
+]
+sim = [
+    "numpy>=1.26",
+    "scipy>=1.12",
+]
+hil = [
+    "paramiko>=3.4",
+    "rich>=13.7",
+]
+
+[tool.black]
+target-version = ["py310"]
+line-length = 100
+include = "\\.pyi?$"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+target-version = "py310"
+select = [
+    "E",
+    "F",
+    "I",
+    "B",
+    "N",
+    "UP",
+    "D",
+]
+ignore = [
+    "D100",
+    "D104",
+    "D105",
+]
+
+[tool.ruff.per-file-ignores]
+"tests/**" = ["D"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+packages = ["src"]
+files = ["src", "scripts"]
+plugins = []
+show_error_codes = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers"
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = [
+    "error::DeprecationWarning",
+    "error::PendingDeprecationWarning",
+]
+markers = [
+    "camjam_unit: Unit tests for CamJam components using pure Python fakes or mocks.",
+    "camjam_simulation: Tests exercising the CamJam simulator integration.",
+    "camjam_mocked_hw: Tests that mock pigpio/I2C for hardware interactions.",
+    "camjam_hil: Slow hardware-in-the-loop tests requiring the real buggy.",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+precision = 2
+fail_under = 85.0
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == \"__main__\":",
+]
