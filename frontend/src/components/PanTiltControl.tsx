@@ -7,7 +7,13 @@ const PAN_RANGE = [-90, 90];
 const TILT_RANGE = [-45, 45];
 
 export function PanTiltControl() {
-  const { sendPanTiltCommand, sendPreset } = useContext(ControlContext);
+  const {
+    sendPanTiltCommand,
+    sendPreset,
+    video,
+    startVideoStream,
+    stopVideoStream,
+  } = useContext(ControlContext);
   const [pan, setPan] = useState(0);
   const [tilt, setTilt] = useState(0);
   const [pendingPreset, setPendingPreset] = useState<string | null>(null);
@@ -19,6 +25,14 @@ export function PanTiltControl() {
     return () => window.clearTimeout(timer);
   }, [pan, tilt, sendPanTiltCommand]);
 
+  useEffect(() => {
+    if (video.status === 'idle') {
+      startVideoStream();
+    }
+  }, [video.status, startVideoStream]);
+
+  useEffect(() => () => stopVideoStream(), [stopVideoStream]);
+
   const angleBadge = useMemo(
     () => (
       <div className="mt-4 flex gap-4 text-sm text-slate-500 dark:text-slate-300">
@@ -28,6 +42,25 @@ export function PanTiltControl() {
     ),
     [pan, tilt]
   );
+
+  const streamStatusLabel = useMemo(() => {
+    switch (video.status) {
+      case 'live':
+        return 'Live stream';
+      case 'starting':
+        return 'Connecting…';
+      case 'fallback':
+        return 'Fallback still';
+      case 'error':
+        return 'Stream error';
+      default:
+        return 'Stream idle';
+    }
+  }, [video.status]);
+
+  const isLive = video.status === 'live';
+  const isStarting = video.status === 'starting';
+  const streamButtonLabel = isLive ? 'Stop Stream' : isStarting ? 'Starting…' : 'Start Stream';
 
   const handlePreset = (preset: 'center' | 'sweep' | 'inspect') => {
     setPendingPreset(preset);
@@ -55,6 +88,47 @@ export function PanTiltControl() {
       </header>
 
       <div className="mt-4 space-y-6">
+        <div>
+          <div
+            className="relative aspect-video overflow-hidden rounded-lg bg-slate-900"
+            data-testid="pantilt-stream"
+            data-stream-status={video.status}
+          >
+            {video.src ? (
+              <img
+                src={video.src}
+                alt={video.status === 'live' ? 'PanTilt live stream' : 'PanTilt fallback still'}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
+                Stream unavailable
+              </div>
+            )}
+            <span className="absolute bottom-2 left-2 rounded-md bg-slate-900/80 px-2 py-1 text-xs font-medium text-slate-100">
+              {streamStatusLabel}
+            </span>
+            {video.lastError && (
+              <span className="absolute bottom-2 right-2 rounded-md bg-amber-500/80 px-2 py-1 text-xs font-semibold text-slate-900">
+                {video.lastError}
+              </span>
+            )}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="btn border border-brand-400/40 bg-brand-500/90 text-white hover:bg-brand-400 focus-visible:ring-brand-300 disabled:cursor-not-allowed disabled:bg-slate-700"
+              onClick={isLive ? stopVideoStream : startVideoStream}
+              disabled={isStarting}
+            >
+              {streamButtonLabel}
+            </button>
+            {video.fallbackSrc && video.status === 'fallback' && (
+              <span className="text-xs text-slate-400">Displaying cached still image.</span>
+            )}
+          </div>
+        </div>
+
         <div>
           <label htmlFor="pan-slider" className="block text-sm font-medium text-slate-200">
             Pan Angle

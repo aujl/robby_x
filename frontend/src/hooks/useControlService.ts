@@ -1,5 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ControlContextValue, ControlTelemetry, ConnectionState } from '@/context/ControlContext';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ControlContextValue,
+  ControlTelemetry,
+  ConnectionState,
+  VideoStreamState,
+} from '@/context/ControlContext';
 import { ControlService } from '@/services/ControlService';
 
 const DEFAULT_TELEMETRY: ControlTelemetry = {
@@ -19,6 +24,21 @@ export function useControlService(): ControlContextValue {
   const [telemetry, setTelemetry] = useState<ControlTelemetry>(DEFAULT_TELEMETRY);
   const [connection, setConnection] = useState<ConnectionState>(DEFAULT_CONNECTION);
   const [queueSize, setQueueSize] = useState<number>(0);
+  const streamUrl = useMemo(
+    () => import.meta.env.VITE_VIDEO_STREAM_URL ?? 'http://localhost:8081/stream.mjpg',
+    []
+  );
+  const fallbackUrl = useMemo(
+    () => import.meta.env.VITE_VIDEO_FALLBACK_URL ?? null,
+    []
+  );
+  const [video, setVideo] = useState<VideoStreamState>({
+    status: 'idle',
+    src: null,
+    fallbackSrc: fallbackUrl,
+    lastError: null,
+  });
+  const probeRef = useRef<HTMLImageElement | null>(null);
 
   const service = useMemo(() => {
     const url = import.meta.env.VITE_CONTROL_WS ?? 'ws://localhost:8080/ws';
@@ -39,6 +59,44 @@ export function useControlService(): ControlContextValue {
     };
   }, [service]);
 
+  const startVideoStream = useCallback(() => {
+    setVideo((prev) => ({ ...prev, status: 'starting', lastError: null }));
+
+    const probe = new Image();
+    if (probeRef.current) {
+      probeRef.current.onload = null;
+      probeRef.current.onerror = null;
+    }
+    probeRef.current = probe;
+
+    const finalize = (status: VideoStreamState['status'], src: string | null, error: string | null) => {
+      if (probeRef.current !== probe) {
+        return;
+      }
+      probe.onload = null;
+      probe.onerror = null;
+      probeRef.current = null;
+      setVideo({ status, src, fallbackSrc: fallbackUrl, lastError: error });
+    };
+
+    const cacheBust = `${streamUrl}${streamUrl.includes('?') ? '&' : '?'}cacheBust=${Date.now()}`;
+    probe.onload = () => finalize('live', streamUrl, null);
+    probe.onerror = () => finalize(fallbackUrl ? 'fallback' : 'error', fallbackUrl, 'Stream unavailable');
+    probe.src = cacheBust;
+  }, [fallbackUrl, streamUrl]);
+
+  const stopVideoStream = useCallback(() => {
+    const probe = probeRef.current;
+    if (probe) {
+      probe.onload = null;
+      probe.onerror = null;
+      probeRef.current = null;
+    }
+    setVideo({ status: 'idle', src: null, fallbackSrc: fallbackUrl, lastError: null });
+  }, [fallbackUrl]);
+
+  useEffect(() => () => stopVideoStream(), [stopVideoStream]);
+
   return {
     connection,
     telemetry,
@@ -46,5 +104,8 @@ export function useControlService(): ControlContextValue {
     sendDriveCommand: (payload) => service.send({ type: 'drive/setpoint', payload }),
     sendPanTiltCommand: (payload) => service.send({ type: 'pantilt/command', payload }),
     sendPreset: (preset) => service.send({ type: 'pantilt/preset', payload: preset }),
+    video,
+    startVideoStream,
+    stopVideoStream,
   };
 }
