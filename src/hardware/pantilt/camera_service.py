@@ -65,8 +65,8 @@ class PanTiltCameraService:
 
         self._camera_factory: Callable[[], Any] = camera_factory or picamera_cls
         self._encoder_factory: Callable[[], Any] = encoder_factory or (lambda: mjpeg_encoder_cls())
-        self._output_factory: Callable[[Any], Any] = (
-            output_factory or (lambda destination: file_output_cls(destination))
+        self._output_factory: Callable[[Any], Any] = output_factory or (
+            lambda destination: file_output_cls(destination)
         )
 
     @property

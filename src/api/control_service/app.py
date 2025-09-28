@@ -7,7 +7,12 @@ from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-from .command_queue import CommandQueue, CommandQueueFullError, DriveCommand, MotorControllerProtocol
+from .command_queue import (
+    CommandQueue,
+    CommandQueueFullError,
+    DriveCommand,
+    MotorControllerProtocol,
+)
 from .config import ControlServiceConfig, RateLimitSettings
 from .rate_limiter import TokenBucket
 
@@ -18,6 +23,7 @@ class Response:
 
     status_code: int
     body: dict[str, Any]
+
 
 class ServoControllerProtocol(Protocol):
     def move_to(self, pan: float, tilt: float) -> None: ...
@@ -82,9 +88,7 @@ class ControlServiceApp:
             maxsize=config.queue_maxsize,
         )
         self._allowed_networks = [ipaddress.ip_network(net) for net in config.allowed_networks]
-        self._routes: dict[
-            tuple[str, str], Callable[[dict[str, Any]], Awaitable[Response]]
-        ] = {
+        self._routes: dict[tuple[str, str], Callable[[dict[str, Any]], Awaitable[Response]]] = {
             ("POST", "/drive/differential"): self._handle_drive,
             ("POST", "/drive/stop"): self._handle_stop,
             ("POST", "/drive/brake"): self._handle_brake,

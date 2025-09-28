@@ -10,7 +10,11 @@ from .sensors.ultrasonic import UltrasonicRanger
 from .servo_controller import CamJamPanTiltServos
 
 if TYPE_CHECKING:
-    from src.simulation.camjam import CamJamSimulation, SimulatedMotorController, SimulatedPanTiltServos
+    from src.simulation.camjam import (
+        CamJamSimulation,
+        SimulatedMotorController,
+        SimulatedPanTiltServos,
+    )
 
 __all__ = [
     "CamJamMotorController",

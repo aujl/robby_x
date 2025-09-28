@@ -15,6 +15,7 @@ class DriveCommand:
     right_speed: float
     duration_s: float | None = None
 
+
 class MotorControllerProtocol(Protocol):
     """Behaviour required from the motor controller dependency."""
 
