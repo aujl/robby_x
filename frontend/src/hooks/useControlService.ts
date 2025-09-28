@@ -4,6 +4,7 @@ import {
   ControlTelemetry,
   ConnectionState,
   VideoStreamState,
+  DiagnosticsState,
 } from '@/context/ControlContext';
 import { ControlService } from '@/services/ControlService';
 
@@ -20,10 +21,20 @@ const DEFAULT_CONNECTION: ConnectionState = {
   retries: 0,
 };
 
+const DEFAULT_DIAGNOSTICS: DiagnosticsState = {
+  motors: { status: 'unknown', lastEventAt: null, lastCommand: null, history: [] },
+  ultrasonic: {},
+  line_sensors: {},
+  pan_tilt: { status: 'unknown', pan_deg: 0, tilt_deg: 0, preset: null, updatedAt: null, stale: true },
+  video_stream: { status: 'idle', detail: null, src: null, stale: true, lastEventAt: null },
+  events: [],
+};
+
 export function useControlService(): ControlContextValue {
   const [telemetry, setTelemetry] = useState<ControlTelemetry>(DEFAULT_TELEMETRY);
   const [connection, setConnection] = useState<ConnectionState>(DEFAULT_CONNECTION);
   const [queueSize, setQueueSize] = useState<number>(0);
+  const [diagnostics] = useState<DiagnosticsState>(DEFAULT_DIAGNOSTICS);
   const streamUrl = useMemo(
     () => import.meta.env.VITE_VIDEO_STREAM_URL ?? 'http://localhost:8081/stream.mjpg',
     []
@@ -100,6 +111,7 @@ export function useControlService(): ControlContextValue {
   return {
     connection,
     telemetry,
+    diagnostics,
     queueSize,
     sendDriveCommand: (payload) => service.send({ type: 'drive/setpoint', payload }),
     sendPanTiltCommand: (payload) => service.send({ type: 'pantilt/command', payload }),
