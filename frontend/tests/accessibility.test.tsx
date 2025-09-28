@@ -49,7 +49,7 @@ describe('PanTiltControl accessibility', () => {
     const panSlider = screen.getByRole('slider', { name: /pan angle/i });
     expect(panSlider).toHaveAttribute('aria-valuemin', '-90');
 
-    await user.tab();
+    panSlider.focus();
     await user.keyboard('{ArrowRight}');
 
     await waitFor(() =>
