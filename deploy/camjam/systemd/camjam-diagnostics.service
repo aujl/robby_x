@@ -1,0 +1,12 @@
+[Unit]
+Description=CamJam Diagnostics Reporter
+After=camjam-control.service
+
+[Service]
+Type=oneshot
+User=pi
+Group=pi
+ExecStart=/opt/camjam/bin/diagnostics.sh
+
+[Install]
+WantedBy=multi-user.target

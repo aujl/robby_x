@@ -1,0 +1,18 @@
+# CamJam Pin Mapping derived from the official CamJam EduKit layout
+motors:
+  left_forward: 17
+  left_reverse: 18
+  right_forward: 22
+  right_reverse: 23
+servos:
+  pan: 12
+  tilt: 13
+sensors:
+  ultrasonic_trigger: 5
+  ultrasonic_echo: 6
+  battery_adc: 7
+leds:
+  status: 16
+  fault: 26
+power:
+  relay_enable: 24

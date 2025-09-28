@@ -1,0 +1,16 @@
+[Unit]
+Description=CamJam Camera Streaming Service
+After=network.target camjam-control.service
+Requires=camjam-control.service
+ConditionPathExists=/etc/camjam/pins.yaml
+
+[Service]
+Type=simple
+User=pi
+Group=video
+ExecStart=/usr/bin/libcamera-vid --width 1280 --height 720 --inline --nopreview --framerate 30 --bitrate 4000000 --listen -o tcp://0.0.0.0:8554
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
