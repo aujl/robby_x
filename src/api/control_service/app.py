@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import ipaddress
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 
-from .command_queue import CommandQueue, CommandQueueFullError, DriveCommand
+from .command_queue import CommandQueue, CommandQueueFullError, DriveCommand, MotorControllerProtocol
 from .config import ControlServiceConfig, RateLimitSettings
 from .rate_limiter import TokenBucket
 
@@ -18,6 +19,37 @@ class Response:
     status_code: int
     body: dict[str, Any]
 
+class ServoControllerProtocol(Protocol):
+    def move_to(self, pan: float, tilt: float) -> None: ...
+
+    @property
+    def pan(self) -> float: ...
+
+    @property
+    def tilt(self) -> float: ...
+
+
+class UltrasonicSampleProtocol(Protocol):
+    distance_m: float
+    valid: bool
+
+
+class UltrasonicRangerProtocol(Protocol):
+    async def read(self) -> UltrasonicSampleProtocol: ...
+
+    @property
+    def history(self) -> Iterable[UltrasonicSampleProtocol]: ...
+
+
+class LineTelemetryProtocol(Protocol):
+    left: float
+    right: float
+    on_line: bool
+
+
+class LineFollowerProtocol(Protocol):
+    async def read(self) -> LineTelemetryProtocol: ...
+
 
 class ControlServiceApp:
     """Application facade that mimics a small subset of FastAPI."""
@@ -26,10 +58,10 @@ class ControlServiceApp:
         self,
         *,
         config: ControlServiceConfig,
-        motor_controller: Any,
-        servo_controller: Any,
-        ultrasonic_ranger: Any,
-        line_follower: Any,
+        motor_controller: MotorControllerProtocol,
+        servo_controller: ServoControllerProtocol,
+        ultrasonic_ranger: UltrasonicRangerProtocol,
+        line_follower: LineFollowerProtocol,
     ) -> None:
         self.config = config
         self.motor_controller = motor_controller
@@ -50,7 +82,9 @@ class ControlServiceApp:
             maxsize=config.queue_maxsize,
         )
         self._allowed_networks = [ipaddress.ip_network(net) for net in config.allowed_networks]
-        self._routes: dict[tuple[str, str], Any] = {
+        self._routes: dict[
+            tuple[str, str], Callable[[dict[str, Any]], Awaitable[Response]]
+        ] = {
             ("POST", "/drive/differential"): self._handle_drive,
             ("POST", "/drive/stop"): self._handle_stop,
             ("POST", "/drive/brake"): self._handle_brake,

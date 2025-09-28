@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from typing import Protocol
 
 from .rate_limiter import TokenBucket
 
@@ -13,6 +14,19 @@ class DriveCommand:
     left_speed: float
     right_speed: float
     duration_s: float | None = None
+
+class MotorControllerProtocol(Protocol):
+    """Behaviour required from the motor controller dependency."""
+
+    def drive(self, left_speed: float, right_speed: float) -> None: ...
+
+    def stop(self) -> None: ...
+
+    def brake(self) -> None: ...
+
+    def emergency_stop(self) -> None: ...
+
+    def reset_estop(self) -> None: ...
 
 
 class CommandQueueFullError(RuntimeError):
@@ -25,7 +39,7 @@ class CommandQueue:
     def __init__(
         self,
         *,
-        motor_controller,
+        motor_controller: MotorControllerProtocol,
         limiter: TokenBucket,
         maxsize: int,
     ) -> None:

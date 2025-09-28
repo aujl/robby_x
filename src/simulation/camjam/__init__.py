@@ -5,7 +5,8 @@ from __future__ import annotations
 import os
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import TypeVar
+from types import TracebackType
+from typing import Any, TypeVar
 
 from src.hardware.camjam.sensors.encoders import WheelEncoders
 from src.hardware.camjam.sensors.ultrasonic import UltrasonicRanger
@@ -132,7 +133,12 @@ class SimulatedMotorController:
     def __enter__(self) -> "SimulatedMotorController":
         return self
 
-    def __exit__(self, exc_type, exc, tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         self.close()
 
 
@@ -220,15 +226,15 @@ class CamJamSimulation:
     def create_motor_controller(self) -> SimulatedMotorController:
         return SimulatedMotorController(self._playback)
 
-    def create_wheel_encoders(self, **kwargs) -> WheelEncoders:
+    def create_wheel_encoders(self, **kwargs: Any) -> WheelEncoders:
         reader = _SimulatedEncoderSampleReader(self._playback)
         return WheelEncoders(sample_reader=reader, **kwargs)
 
-    def create_ultrasonic_ranger(self, **kwargs) -> UltrasonicRanger:
+    def create_ultrasonic_ranger(self, **kwargs: Any) -> UltrasonicRanger:
         reader = _SimulatedUltrasonicEchoReader(self._playback)
         return UltrasonicRanger(echo_time_reader=reader, **kwargs)
 
-    def create_pan_tilt_servos(self, **kwargs) -> SimulatedPanTiltServos:
+    def create_pan_tilt_servos(self, **kwargs: Any) -> SimulatedPanTiltServos:
         return SimulatedPanTiltServos(self._playback, **kwargs)
 
 

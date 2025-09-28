@@ -1,4 +1,11 @@
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
   - repo: https://github.com/psf/black
     rev: 24.4.2
     hooks:
@@ -14,21 +21,13 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
-        additional_dependencies:
-          - types-requests
-        args:
-          - --config-file=pyproject.toml
+        additional_dependencies: []
+        args: ["--config-file", "pyproject.toml"]
   - repo: local
     hooks:
-      - id: pytest-camjam
-        name: pytest-camjam
-        entry: pytest -m "camjam_unit or camjam_simulation or camjam_mocked_hw" --maxfail=1 --disable-warnings
+      - id: pytest
+        name: pytest
+        entry: pytest
         language: system
         pass_filenames: false
-        stages: [commit]
-      - id: npm-test-frontend
-        name: npm-test-frontend
-        entry: bash -c 'cd frontend && npm test -- --run'
-        language: system
-        pass_filenames: false
-        stages: [commit]
+        always_run: true

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from .motor_controller import CamJamMotorController
 from .sensors.encoders import WheelEncoders
 from .sensors.ultrasonic import UltrasonicRanger
 from .servo_controller import CamJamPanTiltServos
+
+if TYPE_CHECKING:
+    from src.simulation.camjam import CamJamSimulation, SimulatedMotorController, SimulatedPanTiltServos
 
 __all__ = [
     "CamJamMotorController",
@@ -21,7 +24,7 @@ __all__ = [
 ]
 
 
-def _simulation_context():
+def _simulation_context() -> "CamJamSimulation":
     from src.simulation import camjam as camjam_sim
 
     return camjam_sim.get_simulation_context()
@@ -33,7 +36,9 @@ def _simulation_enabled() -> bool:
     return camjam_sim.simulation_enabled()
 
 
-def get_motor_controller(**kwargs: Any) -> CamJamMotorController:
+def get_motor_controller(
+    **kwargs: Any,
+) -> CamJamMotorController | "SimulatedMotorController":
     """Return a motor controller for the current runtime context."""
 
     if _simulation_enabled():
@@ -41,7 +46,11 @@ def get_motor_controller(**kwargs: Any) -> CamJamMotorController:
     return CamJamMotorController(**kwargs)
 
 
-def get_wheel_encoders(*, sample_reader=None, **kwargs: Any) -> WheelEncoders:
+def get_wheel_encoders(
+    *,
+    sample_reader: Any | None = None,
+    **kwargs: Any,
+) -> WheelEncoders:
     """Return wheel encoders backed by either hardware or simulation."""
 
     if _simulation_enabled():
@@ -51,7 +60,11 @@ def get_wheel_encoders(*, sample_reader=None, **kwargs: Any) -> WheelEncoders:
     return WheelEncoders(sample_reader=sample_reader, **kwargs)
 
 
-def get_ultrasonic_ranger(*, echo_time_reader=None, **kwargs: Any) -> UltrasonicRanger:
+def get_ultrasonic_ranger(
+    *,
+    echo_time_reader: Any | None = None,
+    **kwargs: Any,
+) -> UltrasonicRanger:
     """Return an ultrasonic ranger instance for the active environment."""
 
     if _simulation_enabled():
@@ -61,7 +74,9 @@ def get_ultrasonic_ranger(*, echo_time_reader=None, **kwargs: Any) -> Ultrasonic
     return UltrasonicRanger(echo_time_reader=echo_time_reader, **kwargs)
 
 
-def get_pan_tilt_servos(**kwargs: Any) -> CamJamPanTiltServos:
+def get_pan_tilt_servos(
+    **kwargs: Any,
+) -> CamJamPanTiltServos | "SimulatedPanTiltServos":
     """Return the pan/tilt servo helper appropriate for the environment."""
 
     if _simulation_enabled():
