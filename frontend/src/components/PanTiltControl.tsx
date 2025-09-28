@@ -7,13 +7,8 @@ const PAN_RANGE = [-90, 90];
 const TILT_RANGE = [-45, 45];
 
 export function PanTiltControl() {
-  const {
-    sendPanTiltCommand,
-    sendPreset,
-    video,
-    startVideoStream,
-    stopVideoStream,
-  } = useContext(ControlContext);
+  const { sendPanTiltCommand, sendPreset, video, startVideoStream, stopVideoStream } =
+    useContext(ControlContext);
   const [pan, setPan] = useState(0);
   const [tilt, setTilt] = useState(0);
   const [pendingPreset, setPendingPreset] = useState<string | null>(null);
@@ -40,7 +35,7 @@ export function PanTiltControl() {
         <span aria-live="polite">Tilt {tilt.toFixed(0)}°</span>
       </div>
     ),
-    [pan, tilt]
+    [pan, tilt],
   );
 
   const streamStatusLabel = useMemo(() => {
@@ -84,7 +79,9 @@ export function PanTiltControl() {
         <h2 id="pantilt-title" className="text-lg font-semibold">
           PanTilt Servos
         </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">Fine-grained orientation control with presets.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Fine-grained orientation control with presets.
+        </p>
       </header>
 
       <div className="mt-4 space-y-6">
@@ -146,7 +143,11 @@ export function PanTiltControl() {
             <Slider.Track className="relative h-2 w-full grow rounded-full bg-slate-700">
               <Slider.Range className="absolute h-full rounded-full bg-brand-400" />
             </Slider.Track>
-            <Slider.Thumb className="block h-5 w-5 rounded-full border border-slate-200 bg-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400" aria-valuemin={PAN_RANGE[0]} aria-valuemax={PAN_RANGE[1]} />
+            <Slider.Thumb
+              className="block h-5 w-5 rounded-full border border-slate-200 bg-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+              aria-valuemin={PAN_RANGE[0]}
+              aria-valuemax={PAN_RANGE[1]}
+            />
           </Slider.Root>
         </div>
 
@@ -167,7 +168,11 @@ export function PanTiltControl() {
             <Slider.Track className="relative h-2 w-full grow rounded-full bg-slate-700">
               <Slider.Range className="absolute h-full rounded-full bg-brand-400" />
             </Slider.Track>
-            <Slider.Thumb className="block h-5 w-5 rounded-full border border-slate-200 bg-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400" aria-valuemin={TILT_RANGE[0]} aria-valuemax={TILT_RANGE[1]} />
+            <Slider.Thumb
+              className="block h-5 w-5 rounded-full border border-slate-200 bg-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+              aria-valuemin={TILT_RANGE[0]}
+              aria-valuemax={TILT_RANGE[1]}
+            />
           </Slider.Root>
         </div>
 
@@ -186,7 +191,7 @@ export function PanTiltControl() {
               type="button"
               className={clsx(
                 'btn border border-brand-400/40 bg-brand-500/90 text-white hover:bg-brand-400 focus-visible:ring-brand-300',
-                pendingPreset === preset.id ? 'animate-pulse' : ''
+                pendingPreset === preset.id ? 'animate-pulse' : '',
               )}
               onClick={() => handlePreset(preset.id)}
             >

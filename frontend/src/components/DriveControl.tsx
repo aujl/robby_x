@@ -1,4 +1,11 @@
-import { useContext, useMemo, useRef, useState } from 'react';
+import {
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react';
 import { ControlContext } from '@/context/ControlContext';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
@@ -18,7 +25,7 @@ const KEYBOARD_MAP: Record<string, { vx: number; vy: number; omega: number }> = 
 
 export function DriveControl() {
   const { sendDriveCommand, connection, queueSize } = useContext(ControlContext);
-  const padRef = useRef<HTMLDivElement>(null);
+  const padRef = useRef<HTMLButtonElement>(null);
   const [vector, setVector] = useState({ vx: 0, vy: 0, omega: 0 });
   const [lastInteraction, setLastInteraction] = useState<Date | null>(null);
 
@@ -47,7 +54,7 @@ export function DriveControl() {
     setLastInteraction(new Date());
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     const mapping = KEYBOARD_MAP[event.key];
     if (!mapping) {
       return;
@@ -56,7 +63,7 @@ export function DriveControl() {
     dispatchCommand(mapping);
   };
 
-  const handlePointer = (event: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointer = (event: PointerEvent<HTMLButtonElement>) => {
     const rect = padRef.current?.getBoundingClientRect();
     if (!rect) {
       return;
@@ -77,23 +84,22 @@ export function DriveControl() {
     <section className="card" aria-labelledby="drive-title">
       <header className="flex items-center justify-between">
         <div>
-          <h2 id="drive-title" className="text-lg font-semibold">Drive Control</h2>
+          <h2 id="drive-title" className="text-lg font-semibold">
+            Drive Control
+          </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400" aria-live="polite">
             {statusText}
           </p>
         </div>
         <div className="text-right text-sm text-slate-500 dark:text-slate-400">
           <span>{lastCommandText}</span>
-          {queueSize > 0 && (
-            <p className="text-amber-500">Queued {queueSize} commands</p>
-          )}
+          {queueSize > 0 && <p className="text-amber-500">Queued {queueSize} commands</p>}
         </div>
       </header>
 
-      <div
+      <button
         ref={padRef}
-        tabIndex={0}
-        role="application"
+        type="button"
         aria-label="Drive surface"
         onKeyDown={handleKeyDown}
         onPointerDown={(event) => {
@@ -111,15 +117,19 @@ export function DriveControl() {
         }}
         className={clsx(
           'mt-4 grid h-64 place-items-center rounded-2xl border border-brand-500/40 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-center text-sm text-slate-200 shadow-inner focus:outline-none focus:ring-4 focus:ring-brand-400/50',
-          'touch-none'
+          'touch-none',
         )}
       >
         <div>
           <p className="text-xs uppercase tracking-wider text-slate-400">Command Vector</p>
-          <p className="font-mono text-lg">vx {vector.vx.toFixed(2)} · vy {vector.vy.toFixed(2)} · ω {vector.omega.toFixed(2)}</p>
-          <p className="mt-2 text-xs text-slate-400">Use joystick, keyboard (WASD/Arrows), or touch to drive.</p>
+          <p className="font-mono text-lg">
+            vx {vector.vx.toFixed(2)} · vy {vector.vy.toFixed(2)} · ω {vector.omega.toFixed(2)}
+          </p>
+          <p className="mt-2 text-xs text-slate-400">
+            Use joystick, keyboard (WASD/Arrows), or touch to drive.
+          </p>
         </div>
-      </div>
+      </button>
     </section>
   );
 }

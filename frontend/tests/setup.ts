@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 
-window.HTMLElement.prototype.scrollIntoView = window.HTMLElement.prototype.scrollIntoView ?? (() => {});
+window.HTMLElement.prototype.scrollIntoView =
+  window.HTMLElement.prototype.scrollIntoView ?? (() => {});
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

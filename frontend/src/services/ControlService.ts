@@ -1,5 +1,10 @@
 import mitt, { Emitter } from 'mitt';
-import { ControlTelemetry, DriveCommandPayload, PanTiltCommandPayload, ConnectionState } from '@/context/ControlContext';
+import {
+  ControlTelemetry,
+  DriveCommandPayload,
+  PanTiltCommandPayload,
+  ConnectionState,
+} from '@/context/ControlContext';
 
 type Events = {
   telemetry: ControlTelemetry;
@@ -24,18 +29,31 @@ export class ControlService {
 
   constructor(private readonly url: string) {
     this.emitter = mitt<Events>();
-    this.emitConnection({ status: 'disconnected', latencyMs: null, lastCommandAt: null, retries: 0 });
+    this.emitConnection({
+      status: 'disconnected',
+      latencyMs: null,
+      lastCommandAt: null,
+      retries: 0,
+    });
   }
 
   on = this.emitter.on;
   off = this.emitter.off;
 
   connect() {
-    if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
+    if (
+      this.socket &&
+      (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)
+    ) {
       return;
     }
 
-    this.emitConnection({ status: 'connecting', latencyMs: null, lastCommandAt: this.lastCommandAt, retries: this.retries });
+    this.emitConnection({
+      status: 'connecting',
+      latencyMs: null,
+      lastCommandAt: this.lastCommandAt,
+      retries: this.retries,
+    });
 
     try {
       this.socket = new WebSocket(this.url);
@@ -45,7 +63,12 @@ export class ControlService {
       socket.addEventListener('open', () => {
         this.retries = 0;
         const latency = Math.round(performance.now() - start);
-        this.emitConnection({ status: 'connected', latencyMs: latency, lastCommandAt: this.lastCommandAt, retries: this.retries });
+        this.emitConnection({
+          status: 'connected',
+          latencyMs: latency,
+          lastCommandAt: this.lastCommandAt,
+          retries: this.retries,
+        });
         this.flushQueue();
       });
 
@@ -78,7 +101,12 @@ export class ControlService {
       });
 
       socket.addEventListener('close', () => {
-        this.emitConnection({ status: 'reconnecting', latencyMs: null, lastCommandAt: this.lastCommandAt, retries: this.retries });
+        this.emitConnection({
+          status: 'reconnecting',
+          latencyMs: null,
+          lastCommandAt: this.lastCommandAt,
+          retries: this.retries,
+        });
         this.scheduleReconnect();
       });
 

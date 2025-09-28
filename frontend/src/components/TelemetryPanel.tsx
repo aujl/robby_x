@@ -51,7 +51,7 @@ export function TelemetryPanel() {
         const level = classifyDistance(distance);
         return { position, distance, level };
       }),
-    [telemetry.ultrasonic]
+    [telemetry.ultrasonic],
   );
 
   const timeline = useMemo(() => {
@@ -89,7 +89,9 @@ export function TelemetryPanel() {
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Ultrasonic</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Ultrasonic
+          </h3>
           <div className="mt-2 grid gap-2">
             {ultrasonicEntries.map(({ position, distance, level }) => (
               <div
@@ -98,8 +100,10 @@ export function TelemetryPanel() {
                   'flex items-center justify-between rounded-lg border p-2 text-sm',
                   level === 'danger' && 'border-red-400/40 bg-red-500/10 text-red-300',
                   level === 'caution' && 'border-amber-400/40 bg-amber-500/10 text-amber-200',
-                  level === 'safe' && 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200'
+                  level === 'safe' && 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200',
                 )}
+                role="group"
+                aria-label={`${position} distance ${distance.toFixed(0)} centimeters`}
                 data-level={level}
               >
                 <span className="capitalize">{position}</span>
@@ -110,7 +114,9 @@ export function TelemetryPanel() {
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Line Follow</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Line Follow
+          </h3>
           <div className="mt-2 space-y-2">
             {(['left', 'center', 'right'] as const).map((pos) => (
               <div key={pos} className="rounded-lg border border-slate-700/40 bg-slate-900/60 p-3">
@@ -126,7 +132,7 @@ export function TelemetryPanel() {
                       key={index}
                       className={clsx(
                         'h-full w-2 rounded-sm transition-all duration-150',
-                        value ? 'bg-brand-400' : 'bg-slate-700'
+                        value ? 'bg-brand-400' : 'bg-slate-700',
                       )}
                       style={{ height: value ? '100%' : '40%' }}
                     />
@@ -140,11 +146,18 @@ export function TelemetryPanel() {
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-slate-700/40 bg-slate-900/60 p-3">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">CamJam Timeline</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            CamJam Timeline
+          </h3>
           <ul className="mt-2 space-y-2 text-sm">
-            {timeline.length === 0 && <li className="text-slate-500">No diagnostics events recorded yet.</li>}
+            {timeline.length === 0 && (
+              <li className="text-slate-500">No diagnostics events recorded yet.</li>
+            )}
             {timeline.map((item) => (
-              <li key={item.key} className="rounded-md border border-slate-800/40 bg-slate-900/80 p-2">
+              <li
+                key={item.key}
+                className="rounded-md border border-slate-800/40 bg-slate-900/80 p-2"
+              >
                 <div className="flex items-center justify-between text-xs uppercase tracking-wide text-slate-500">
                   <span>{item.component}</span>
                   <span>{item.event}</span>
@@ -156,7 +169,9 @@ export function TelemetryPanel() {
         </div>
 
         <div className="rounded-lg border border-slate-700/40 bg-slate-900/60 p-3">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Camera Status</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Camera Status
+          </h3>
           <dl className="mt-2 space-y-2 text-sm">
             <div className="flex items-center justify-between">
               <dt className="text-slate-400">Stream</dt>
@@ -167,7 +182,7 @@ export function TelemetryPanel() {
                     ? 'bg-emerald-500/10 text-emerald-300'
                     : cameraStatus.stale
                       ? 'bg-amber-500/10 text-amber-300'
-                      : 'bg-slate-700/60 text-slate-300'
+                      : 'bg-slate-700/60 text-slate-300',
                 )}
               >
                 {cameraStatus.status}

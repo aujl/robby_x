@@ -8,7 +8,14 @@ const defaultDiagnostics = {
   motors: { status: 'unknown', lastEventAt: null, lastCommand: null, history: [] },
   ultrasonic: {},
   line_sensors: {},
-  pan_tilt: { status: 'unknown', pan_deg: 0, tilt_deg: 0, preset: null, updatedAt: null, stale: true },
+  pan_tilt: {
+    status: 'unknown',
+    pan_deg: 0,
+    tilt_deg: 0,
+    preset: null,
+    updatedAt: null,
+    stale: true,
+  },
   video_stream: { status: 'idle', detail: null, src: null, stale: true, lastEventAt: null },
   events: [],
 };
@@ -34,7 +41,7 @@ function renderWithValue(value: ControlContextValue) {
   return render(
     <ControlContext.Provider value={value}>
       <PanTiltControl />
-    </ControlContext.Provider>
+    </ControlContext.Provider>,
   );
 }
 
