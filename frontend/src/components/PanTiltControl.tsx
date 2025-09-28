@@ -143,11 +143,12 @@ export function PanTiltControl() {
             <Slider.Track className="relative h-2 w-full grow rounded-full bg-slate-700">
               <Slider.Range className="absolute h-full rounded-full bg-brand-400" />
             </Slider.Track>
-            <Slider.Thumb
-              className="block h-5 w-5 rounded-full border border-slate-200 bg-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-              aria-valuemin={PAN_RANGE[0]}
-              aria-valuemax={PAN_RANGE[1]}
-            />
+          <Slider.Thumb
+            className="block h-5 w-5 rounded-full border border-slate-200 bg-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            aria-valuemin={PAN_RANGE[0]}
+            aria-valuemax={PAN_RANGE[1]}
+            aria-label="Pan angle"
+          />
           </Slider.Root>
         </div>
 
@@ -168,11 +169,12 @@ export function PanTiltControl() {
             <Slider.Track className="relative h-2 w-full grow rounded-full bg-slate-700">
               <Slider.Range className="absolute h-full rounded-full bg-brand-400" />
             </Slider.Track>
-            <Slider.Thumb
-              className="block h-5 w-5 rounded-full border border-slate-200 bg-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-              aria-valuemin={TILT_RANGE[0]}
-              aria-valuemax={TILT_RANGE[1]}
-            />
+          <Slider.Thumb
+            className="block h-5 w-5 rounded-full border border-slate-200 bg-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            aria-valuemin={TILT_RANGE[0]}
+            aria-valuemax={TILT_RANGE[1]}
+            aria-label="Tilt angle"
+          />
           </Slider.Root>
         </div>
 

@@ -150,7 +150,8 @@ describe('TelemetryPanel', () => {
     expect(screen.getByText(/camjam timeline/i)).toBeInTheDocument();
     expect(screen.getByText(/left speed: 0.55/i)).toBeInTheDocument();
     expect(screen.getByText(/camera status/i)).toBeInTheDocument();
-    expect(screen.getByText(/Nominal bitrate/i)).toBeInTheDocument();
+    expect(screen.getByText(/status: live · detail: Nominal bitrate/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Nominal bitrate$/i)).toBeInTheDocument();
     expect(screen.getByText(/Pan \/ Tilt/i)).toBeInTheDocument();
     expect(screen.getByText(/Responsive/i)).toBeInTheDocument();
   });
