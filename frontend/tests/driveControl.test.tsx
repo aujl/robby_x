@@ -5,6 +5,15 @@ import { DriveControl } from '../src/components/DriveControl';
 import { ControlContext, ControlContextValue } from '../src/context/ControlContext';
 import { ReactNode } from 'react';
 
+const defaultDiagnostics = {
+  motors: { status: 'unknown', lastEventAt: null, lastCommand: null, history: [] },
+  ultrasonic: {},
+  line_sensors: {},
+  pan_tilt: { status: 'unknown', pan_deg: 0, tilt_deg: 0, preset: null, updatedAt: null, stale: true },
+  video_stream: { status: 'idle', detail: null, src: null, stale: true, lastEventAt: null },
+  events: [],
+};
+
 const baseContext: ControlContextValue = {
   connection: { status: 'connected', latencyMs: 32, lastCommandAt: null, retries: 0 },
   telemetry: {
@@ -12,6 +21,7 @@ const baseContext: ControlContextValue = {
     lineFollow: { left: false, center: true, right: false },
     heartbeat: { lastSeen: new Date(), stale: false },
   },
+  diagnostics: defaultDiagnostics,
   sendDriveCommand: vi.fn(),
   sendPanTiltCommand: vi.fn(),
   sendPreset: vi.fn(),

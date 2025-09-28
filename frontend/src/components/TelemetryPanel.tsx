@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
-import { ControlContext } from '@/context/ControlContext';
+import { ControlContext, DiagnosticsEvent } from '@/context/ControlContext';
 import clsx from 'clsx';
 
 const DISTANCE_LEVELS = {
@@ -23,8 +23,15 @@ function classifyDistance(distance: number): 'danger' | 'caution' | 'safe' {
   return 'safe';
 }
 
+function formatEventDetail(event: DiagnosticsEvent) {
+  const entries = Object.entries(event.data)
+    .filter(([, value]) => value !== null && value !== undefined)
+    .map(([key, value]) => `${key.replace(/_/g, ' ')}: ${value}`);
+  return entries.length ? entries.join(' · ') : 'No additional data';
+}
+
 export function TelemetryPanel() {
-  const { telemetry, connection } = useContext(ControlContext);
+  const { telemetry, connection, diagnostics } = useContext(ControlContext);
   const [history, setHistory] = useState<LineHistory>({ left: [], center: [], right: [] });
 
   useEffect(() => {
@@ -46,6 +53,18 @@ export function TelemetryPanel() {
       }),
     [telemetry.ultrasonic]
   );
+
+  const timeline = useMemo(() => {
+    return diagnostics.events.slice(-6).map((event) => ({
+      key: `${event.component}-${event.event}-${event.timestamp.getTime()}`,
+      component: event.component,
+      event: event.event,
+      detail: formatEventDetail(event),
+    }));
+  }, [diagnostics.events]);
+
+  const cameraStatus = diagnostics.video_stream;
+  const panTilt = diagnostics.pan_tilt;
 
   return (
     <section className="card" aria-labelledby="telemetry-title">
@@ -116,6 +135,69 @@ export function TelemetryPanel() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="rounded-lg border border-slate-700/40 bg-slate-900/60 p-3">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">CamJam Timeline</h3>
+          <ul className="mt-2 space-y-2 text-sm">
+            {timeline.length === 0 && <li className="text-slate-500">No diagnostics events recorded yet.</li>}
+            {timeline.map((item) => (
+              <li key={item.key} className="rounded-md border border-slate-800/40 bg-slate-900/80 p-2">
+                <div className="flex items-center justify-between text-xs uppercase tracking-wide text-slate-500">
+                  <span>{item.component}</span>
+                  <span>{item.event}</span>
+                </div>
+                <p className="mt-1 text-slate-200">{item.detail}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-lg border border-slate-700/40 bg-slate-900/60 p-3">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Camera Status</h3>
+          <dl className="mt-2 space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <dt className="text-slate-400">Stream</dt>
+              <dd
+                className={clsx(
+                  'rounded-full px-2 py-0.5 text-xs font-medium',
+                  cameraStatus.status === 'live'
+                    ? 'bg-emerald-500/10 text-emerald-300'
+                    : cameraStatus.stale
+                      ? 'bg-amber-500/10 text-amber-300'
+                      : 'bg-slate-700/60 text-slate-300'
+                )}
+              >
+                {cameraStatus.status}
+              </dd>
+            </div>
+            {cameraStatus.detail && (
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-slate-400">Detail</dt>
+                <dd className="text-right text-slate-200">{cameraStatus.detail}</dd>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <dt className="text-slate-400">Pan / Tilt</dt>
+              <dd className="text-slate-200">
+                {panTilt.pan_deg.toFixed(0)}° / {panTilt.tilt_deg.toFixed(0)}°
+              </dd>
+            </div>
+            {panTilt.preset && (
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-400">Preset</dt>
+                <dd className="text-slate-200 capitalize">{panTilt.preset}</dd>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <dt className="text-slate-400">Health</dt>
+              <dd className={panTilt.stale ? 'text-amber-300' : 'text-emerald-300'}>
+                {panTilt.stale ? 'Stale' : 'Responsive'}
+              </dd>
+            </div>
+          </dl>
         </div>
       </div>
     </section>
