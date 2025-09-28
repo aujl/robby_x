@@ -14,6 +14,9 @@ const contextValue: ControlContextValue = {
   sendPanTiltCommand: vi.fn(),
   sendPreset: vi.fn(),
   queueSize: 0,
+  video: { status: 'live', src: 'http://stream', fallbackSrc: null, lastError: null },
+  startVideoStream: vi.fn(),
+  stopVideoStream: vi.fn(),
 };
 
 describe('App responsiveness', () => {

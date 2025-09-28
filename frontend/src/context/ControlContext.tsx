@@ -44,6 +44,15 @@ export interface PanTiltCommandPayload {
   tiltDeg: number;
 }
 
+export type VideoStreamStatus = 'idle' | 'starting' | 'live' | 'fallback' | 'error';
+
+export interface VideoStreamState {
+  status: VideoStreamStatus;
+  src: string | null;
+  fallbackSrc: string | null;
+  lastError: string | null;
+}
+
 export interface ControlContextValue {
   connection: ConnectionState;
   telemetry: ControlTelemetry;
@@ -51,6 +60,9 @@ export interface ControlContextValue {
   sendDriveCommand: (payload: DriveCommandPayload) => void;
   sendPanTiltCommand: (payload: PanTiltCommandPayload) => void;
   sendPreset: (preset: 'center' | 'sweep' | 'inspect') => void;
+  video: VideoStreamState;
+  startVideoStream: () => void;
+  stopVideoStream: () => void;
 }
 
 export const ControlContext = createContext<ControlContextValue>({
@@ -64,4 +76,7 @@ export const ControlContext = createContext<ControlContextValue>({
   sendDriveCommand: () => undefined,
   sendPanTiltCommand: () => undefined,
   sendPreset: () => undefined,
+  video: { status: 'idle', src: null, fallbackSrc: null, lastError: null },
+  startVideoStream: () => undefined,
+  stopVideoStream: () => undefined,
 });

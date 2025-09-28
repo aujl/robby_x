@@ -15,6 +15,9 @@ const contextValue: ControlContextValue = {
   sendPanTiltCommand: vi.fn(),
   sendPreset: vi.fn(),
   queueSize: 0,
+  video: { status: 'live', src: 'http://stream', fallbackSrc: null, lastError: null },
+  startVideoStream: vi.fn(),
+  stopVideoStream: vi.fn(),
 };
 
 describe('PanTiltControl accessibility', () => {
@@ -33,5 +36,23 @@ describe('PanTiltControl accessibility', () => {
     await user.keyboard('{ArrowRight}');
 
     await waitFor(() => expect(contextValue.sendPanTiltCommand).toHaveBeenLastCalledWith({ panDeg: 1, tiltDeg: 0 }));
+  });
+
+  it('surfaces stream state for assistive tech', () => {
+    const value: ControlContextValue = {
+      ...contextValue,
+      video: { status: 'fallback', src: 'http://still', fallbackSrc: 'http://still', lastError: 'Stream unavailable' },
+    };
+
+    render(
+      <ControlContext.Provider value={value}>
+        <PanTiltControl />
+      </ControlContext.Provider>
+    );
+
+    const stream = screen.getByTestId('pantilt-stream');
+    expect(stream).toHaveAttribute('data-stream-status', 'fallback');
+    expect(screen.getByText(/stream unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/displaying cached still image/i)).toBeInTheDocument();
   });
 });
